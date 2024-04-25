@@ -14,7 +14,6 @@ import org.jetlinks.core.things.ThingProperty;
 import org.jetlinks.core.things.ThingsDataManager;
 import org.jetlinks.core.utils.SerializeUtils;
 import org.jetlinks.core.utils.StringBuilderUtils;
-import org.jetlinks.supports.utils.MVStoreUtils;
 import reactor.core.publisher.Mono;
 import reactor.function.Function4;
 
@@ -57,13 +56,31 @@ public class LocalFileThingsDataManager implements ThingsDataManager, ThingsData
 
     @SuppressWarnings("all")
     private static MVStore load(String fileName) {
-        return MVStoreUtils
-            .open(new File(fileName),
-                  "things-data-manager",
-                  c -> {
-                      return c.keysPerPage(1024)
-                              .cacheSize(64);
-                  });
+        File file = new File(fileName);
+        if (!file.getParentFile().exists()) {
+            file.getParentFile().mkdirs();
+        }
+        try {
+            return open(fileName);
+        } catch (Throwable err) {
+            if (file.exists()) {
+                file.renameTo(new File(fileName + "_load_err_" + System.currentTimeMillis()));
+                file.delete();
+                return open(fileName);
+            } else {
+                throw err;
+            }
+        }
+    }
+
+    private static MVStore open(String fileName) {
+        return new MVStore.Builder()
+            .fileName(fileName)
+            .autoCommitBufferSize(64 * 1024)
+            .compress()
+            .keysPerPage(1024)
+            .cacheSize(64)
+            .open();
     }
 
     public LocalFileThingsDataManager(String fileName) {

@@ -11,7 +11,10 @@ import org.jetlinks.core.device.DeviceOperator;
 import org.jetlinks.core.device.DeviceRegistry;
 import org.jetlinks.core.device.session.DeviceSessionManager;
 import org.jetlinks.core.message.DeviceMessage;
-import org.jetlinks.core.message.codec.*;
+import org.jetlinks.core.message.codec.DefaultTransport;
+import org.jetlinks.core.message.codec.DeviceMessageCodec;
+import org.jetlinks.core.message.codec.FromDeviceMessageContext;
+import org.jetlinks.core.message.codec.Transport;
 import org.jetlinks.core.route.MqttRoute;
 import org.jetlinks.core.utils.TopicUtils;
 import org.jetlinks.community.gateway.AbstractDeviceGateway;
@@ -141,10 +144,17 @@ public class MqttClientDeviceGateway extends AbstractDeviceGateway {
                     .decode(FromDeviceMessageContext.of(
                         new UnknownDeviceMqttClientSession(getId(), mqttClient, monitor),
                         mqttMessage,
-                        registry,
-                        msg -> handleMessage(mqttMessage, msg).then())))
-                .cast(DeviceMessage.class)
-                .concatMap(message -> handleMessage(mqttMessage, message))
+                        registry)))
+                .flatMap(message -> {
+                    monitor.receivedMessage();
+                    return helper
+                        .handleDeviceMessage((DeviceMessage) message,
+                                             device -> createDeviceSession(device, mqttClient),
+                                             ignore -> {
+                                             },
+                                             () -> log.warn("can not get device info from message:{},{}", mqttMessage.print(), message)
+                        );
+                })
                 .subscribeOn(Schedulers.parallel())
                 .onErrorResume((err) -> {
                     log.error("handle mqtt client message error:{}", mqttMessage, err);
@@ -152,18 +162,6 @@ public class MqttClientDeviceGateway extends AbstractDeviceGateway {
                 }), Integer.MAX_VALUE)
             .contextWrite(ReactiveLogger.start("gatewayId", getId()))
             .subscribe();
-    }
-
-    private Mono<Void> handleMessage(MqttMessage mqttMessage, DeviceMessage message) {
-        monitor.receivedMessage();
-        return helper
-            .handleDeviceMessage(message,
-                                 device -> createDeviceSession(device, mqttClient),
-                                 ignore -> {
-                                 },
-                                 () -> log.warn("can not get device info from message:{},{}", mqttMessage.print(), message)
-            )
-            .then();
     }
 
     @AllArgsConstructor(staticName = "of")

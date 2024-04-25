@@ -3,7 +3,6 @@ package org.jetlinks.community.network.mqtt.gateway.device;
 import io.netty.handler.codec.mqtt.MqttConnectReturnCode;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.StatusCode;
-import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.jetlinks.community.gateway.AbstractDeviceGateway;
@@ -28,11 +27,9 @@ import org.springframework.util.StringUtils;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
-import java.net.InetSocketAddress;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Function;
 
@@ -72,7 +69,6 @@ class MqttServerDeviceGateway extends AbstractDeviceGateway {
     private final DeviceSessionManager sessionManager;
 
     //Mqtt 服务
-    @Getter
     private final MqttServer mqttServer;
 
     //解码后的设备消息处理器
@@ -132,7 +128,13 @@ class MqttServerDeviceGateway extends AbstractDeviceGateway {
                          .onErrorResume(err -> {
                              log.error(err.getMessage(), err);
                              return Mono.empty();
-                         }),
+                         })
+                         .as(MonoTracer
+                                 .create(SpanName.connection(connection.getClientId()),
+                                         builder -> {
+                                             builder.setAttribute(clientId, connection.getClientId());
+                                             builder.setAttribute(SpanKey.address, connection.getClientAddress().toString());
+                                         })),
                      Integer.MAX_VALUE)
             .subscribe();
 
@@ -140,7 +142,12 @@ class MqttServerDeviceGateway extends AbstractDeviceGateway {
 
     //处理连接，并进行认证
     private Mono<Tuple3<DeviceOperator, AuthenticationResponse, MqttConnection>> handleConnection(MqttConnection connection) {
-
+        //内存不够了
+        if (SystemUtils.memoryIsOutOfWatermark()) {
+            //直接拒绝,响应SERVER_UNAVAILABLE,不再处理此连接
+            connection.reject(MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE);
+            return Mono.empty();
+        }
         return Mono
             .justOrEmpty(connection.getAuth())
             .flatMap(auth -> {
@@ -183,10 +190,7 @@ class MqttServerDeviceGateway extends AbstractDeviceGateway {
                                 if (!hasValue) {
                                     span.setStatus(StatusCode.ERROR, "device not exists");
                                 }
-                                InetSocketAddress address = connection.getClientAddress();
-                                if (address != null) {
-                                    span.setAttribute(SpanKey.address, address.toString());
-                                }
+                                span.setAttribute(SpanKey.address, connection.getClientAddress().toString());
                                 span.setAttribute(clientId, connection.getClientId());
                             }))
             //设备认证错误,拒绝连接
@@ -288,9 +292,8 @@ class MqttServerDeviceGateway extends AbstractDeviceGateway {
                        MqttConnection::close)
             //网关暂停或者已停止时,则不处理消息
             .filter(pb -> isStarted())
-            .publishOn(Schedulers.parallel())
             //解码收到的mqtt报文
-            .concatMap(publishing -> this
+            .flatMap(publishing -> this
                 .decodeAndHandleMessage(operator, session, publishing, connection)
                 .as(MonoTracer
                         .create(SpanName.upstream(connection.getClientId()),
@@ -316,10 +319,9 @@ class MqttServerDeviceGateway extends AbstractDeviceGateway {
             .getProtocol()
             .flatMap(protocol -> protocol.getMessageCodec(getTransport()))
             //解码
-            .flatMapMany(codec -> codec.decode(FromDeviceMessageContext.of(
-                session, message, registry,msg->handleMessage(operator,msg,connection).then())))
+            .flatMapMany(codec -> codec.decode(FromDeviceMessageContext.of(session, message, registry)))
             .cast(DeviceMessage.class)
-            .concatMap(msg -> {
+            .flatMap(msg -> {
                 //回填deviceId,有的场景协议包不能或者没有解析出deviceId,则直接使用连接对应的设备id进行填充.
                 if (!StringUtils.hasText(msg.getDeviceId())) {
                     msg.thingId(DeviceThingType.device, operator.getDeviceId());
