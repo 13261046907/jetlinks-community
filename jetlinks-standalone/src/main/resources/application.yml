@@ -39,6 +39,19 @@ spring:
 #    timeout: 20s
 #    database: 3
 #    max-wait: 10s
+  datasource:
+    name: number_ticket
+    username: root
+    password: 3+PloXbwcM7+JA=
+    url: jdbc:mysql://101.201.119.26:30016/jetlinks?ssl=false&serverZoneId=Asia/Shanghai
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      maximum-pool-size: 100
+      minimum-idle: 10
+      pool-name: HikaraPool-1
   r2dbc:
     # 需要手动创建数据库,启动会自动创建表,修改了配置easyorm相关配置也要修改
 #    url: r2dbc:postgresql://101.201.119.26:5432/jetlinks
@@ -53,12 +66,12 @@ spring:
   reactor:
     debug-agent:
       enabled: false
-  elasticsearch:
-    uris: 101.201.119.26:9200
-    socket-timeout: 10s
-    connection-timeout: 15s
-    webclient:
-      max-in-memory-size: 100MB
+#  elasticsearch:
+#    uris: 101.201.119.26:9200
+#    socket-timeout: 10s
+#    connection-timeout: 15s
+#    webclient:
+#      max-in-memory-size: 100MB
 easyorm:
   default-schema: jetlinks # 数据库默认的schema
   dialect: mysql #数据库方言
@@ -72,7 +85,7 @@ tdengine:
     password: taosdata
 elasticsearch:
   embedded:
-    enabled: false # 为true时使用内嵌的elasticsearch,不建议在生产环境中使用
+    enabled: true # 为true时使用内嵌的elasticsearch,不建议在生产环境中使用
   index:
     default-strategy: time-by-month #默认es的索引按月进行分表, direct则为直接操作索引.
     settings:
@@ -244,3 +257,12 @@ network:
     - 1883-1890
     - 8800-8810
     - 5060-5061
+#mybatis
+mybatis:
+    mapper-locations: classpath:/mapper/*Mapper.xml
+    #实体扫描，多个package用逗号或者分号分隔
+    typeAliasesPackage: org.jetlinks.community.standalone.view.model
+    configuration:
+        map-underscore-to-camel-case: true
+        cache-enabled: false
+        log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
