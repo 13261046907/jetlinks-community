@@ -1,9 +1,30 @@
 server:
   port: 8848
-
+v2:
+    #虚拟路径映射路径 2个文件路径一一对应 第一个为主存储，其他为配置相关
+    xnljmap:
+        #win服务器  本地 注意！！ 记住这个结尾有一个/
+        #   oss: file:D:/upload/
+        #linux服务器
+        oss: file:/data/zhihui/web/zhihui/file/
+    #虚拟路径映射路径 end
+    #本地存放地址 注意！！ 记住这个结尾没有/
+    fileurl: /data/zhihui/web/zhihui/file/
+    #http://127.0.0.1:8080/oss/{yy}/2022-12-22/c83a77ae134a540c30daa6a0666fa945.md
+    httpurl: http://127.0.0.1:8083/
+    defaultFormat: .png
 spring:
   profiles:
     active: dev
+  servlet:
+      multipart:
+          #设置总上传的数据大小
+          max-request-size: 100MB
+          #单个文件大小
+          maxFileSize : 30MB
+          #xx 报错修改的地方
+      max-connections: 200000
+      max-http-post-size: 9000000
   application:
     name: jetlinks-platform
   jackson:
@@ -39,6 +60,12 @@ spring:
 #    timeout: 20s
 #    database: 3
 #    max-wait: 10s
+  datasource:
+    name: goview
+    username: root
+    password: 3+PloXbwcM7+JA=
+    url: jdbc:mysql://101.201.119.26:30016/goview?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=GMT%2b8
+    driver-class-name: com.mysql.cj.jdbc.Driver
   r2dbc:
     # 需要手动创建数据库,启动会自动创建表,修改了配置easyorm相关配置也要修改
 #    url: r2dbc:postgresql://101.201.119.26:5432/jetlinks
@@ -53,12 +80,18 @@ spring:
   reactor:
     debug-agent:
       enabled: false
-#  elasticsearch:
-#    uris: 101.201.119.26:9200
-#    socket-timeout: 10s
-#    connection-timeout: 15s
-#    webclient:
-#      max-in-memory-size: 100MB
+  elasticsearch:
+    uris: 101.201.119.26:9200
+    socket-timeout: 10s
+    connection-timeout: 15s
+    webclient:
+      max-in-memory-size: 100MB
+mybatis:
+    configuration:
+        map-underscore-to-camel-case: true
+        log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    mapper-locations: classpath:mapper/*.xml
+    type-aliases-package: org.jetlinks.community.standalone.goview.v2.model
 easyorm:
   default-schema: jetlinks # 数据库默认的schema
   dialect: mysql #数据库方言
@@ -72,7 +105,7 @@ tdengine:
     password: taosdata
 elasticsearch:
   embedded:
-    enabled: true # 为true时使用内嵌的elasticsearch,不建议在生产环境中使用
+    enabled: false # 为true时使用内嵌的elasticsearch,不建议在生产环境中使用
   index:
     default-strategy: time-by-month #默认es的索引按月进行分表, direct则为直接操作索引.
     settings:

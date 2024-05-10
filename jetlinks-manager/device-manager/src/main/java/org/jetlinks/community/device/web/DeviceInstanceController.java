@@ -96,7 +96,7 @@ import java.util.stream.Collectors;
 import static org.hswebframework.reactor.excel.ReactorExcel.read;
 
 @RestController
-@RequestMapping({"/device-instance", "/device/instance"})
+@RequestMapping({"/ device-instance", "/device/instance"})
 @Authorize
 @Resource(id = "device-instance", name = "设备实例")
 @Slf4j

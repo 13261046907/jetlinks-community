@@ -6,20 +6,16 @@ import org.hswebframework.web.authorization.events.AuthorizingHandleBeforeEvent;
 import org.hswebframework.web.crud.annotation.EnableEasyormRepository;
 import org.hswebframework.web.logging.aop.EnableAccessLogger;
 import org.hswebframework.web.logging.events.AccessLoggerAfterEvent;
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
-
 
 @SpringBootApplication(scanBasePackages = "org.jetlinks.community", exclude = {
-    DataSourceAutoConfiguration.class,
     ElasticsearchRestClientAutoConfiguration.class
 })
 @EnableCaching
@@ -27,6 +23,12 @@ import javax.annotation.PostConstruct;
 @EnableAopAuthorize
 @EnableAccessLogger
 @Slf4j
+@MapperScan(basePackages = "org.jetlinks.community.standalone.goview.v2.mapper")
+//@ComponentScan(basePackages = {"org.jetlinks.community.standalone.goview.v2.mapper",
+//                                "org.jetlinks.community.timeseries",
+//                                "org.jetlinks.community.notify.manager.service",
+//                                "org.jetlinks.community.config",
+//                                "org.jetlinks.community.io.file"})
 public class JetLinksApplication {
 
     public static void main(String[] args) {
