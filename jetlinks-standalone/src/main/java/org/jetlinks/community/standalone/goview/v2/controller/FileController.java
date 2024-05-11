@@ -12,7 +12,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
-import org.hswebframework.web.authorization.annotation.Authorize;
 import org.jetlinks.community.standalone.goview.v2.common.base.BaseController;
 import org.jetlinks.community.standalone.goview.v2.common.config.V2Config;
 import org.jetlinks.community.standalone.goview.v2.common.domain.AjaxResult;
@@ -44,7 +43,7 @@ import java.util.Map.Entry;
 @RestController
 @RequestMapping("/api/file")
 @Slf4j
-@Authorize
+//@Authorize
 @Tag(name = "文件管理")
 public class FileController extends BaseController {
 

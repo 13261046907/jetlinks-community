@@ -7,7 +7,6 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.hswebframework.web.authorization.annotation.Authorize;
 import org.jetlinks.community.standalone.goview.v2.common.base.BaseController;
 import org.jetlinks.community.standalone.goview.v2.common.config.V2Config;
 import org.jetlinks.community.standalone.goview.v2.common.domain.AjaxResult;
@@ -37,7 +36,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/goview/project")
-@Authorize
+//@Authorize
 @Tag(name = "程序管理")
 public class GoviewProjectController  extends BaseController {
 	@Resource
