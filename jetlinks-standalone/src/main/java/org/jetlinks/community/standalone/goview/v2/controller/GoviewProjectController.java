@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.apache.commons.lang3.StringUtils;
 import org.jetlinks.community.standalone.goview.v2.common.base.BaseController;
 import org.jetlinks.community.standalone.goview.v2.common.config.V2Config;
 import org.jetlinks.community.standalone.goview.v2.common.domain.AjaxResult;
@@ -20,10 +21,10 @@ import org.jetlinks.community.standalone.goview.v2.service.IGoviewProjectService
 import org.jetlinks.community.standalone.goview.v2.service.ISysFileService;
 import org.jetlinks.community.standalone.goview.v2.util.ConvertUtil;
 import org.springframework.beans.BeanUtils;
-import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -156,7 +157,7 @@ public class GoviewProjectController  extends BaseController {
     @ApiOperation(value = "获取项目存储数据", notes = "获取项目存储数据")
     @GetMapping("/getData")
     @ResponseBody
-    public AjaxResult getData(String projectId, ModelMap map)
+    public AjaxResult getData(String projectId)
     {
         GoviewProject goviewProject= iGoviewProjectService.getById(projectId);
 
@@ -173,12 +174,9 @@ public class GoviewProjectController  extends BaseController {
 
     @ApiOperation(value = "保存项目数据", notes = "保存项目数据")
     @PostMapping("/save/data")
-    @ResponseBody
     public AjaxResult saveData(@RequestBody GoviewProjectData data) {
-
         GoviewProject goviewProject= iGoviewProjectService.getById(data.getProjectId());
         if(goviewProject==null) {
-            return error("没有该项目ID");
         }
         GoviewProjectData goviewProjectData= iGoviewProjectDataService.getProjectid(goviewProject.getId());
         if(goviewProjectData!=null) {

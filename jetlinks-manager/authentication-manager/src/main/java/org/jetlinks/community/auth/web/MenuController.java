@@ -43,7 +43,7 @@ import java.util.function.Function;
  */
 @RestController
 @RequestMapping("/menu")
-@Authorize
+//@Authorize
 @Resource(id = "menu", name = "菜单管理", group = "system")
 @Tag(name = "菜单管理")
 @AllArgsConstructor

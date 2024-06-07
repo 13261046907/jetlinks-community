@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 })
 @EnableCaching
 @EnableEasyormRepository("org.jetlinks.community.**.entity")
-@EnableAopAuthorize
+//@EnableAopAuthorize
 @EnableAccessLogger
 @Slf4j
 @MapperScan(basePackages = "org.jetlinks.community.standalone.goview.v2.mapper")
@@ -42,7 +42,7 @@ public class JetLinksApplication {
         @EventListener
         public void handleAuthEvent(AuthorizingHandleBeforeEvent e) {
             //admin用户拥有所有权限
-            if (e.getContext().getAuthentication().getUser().getUsername().equals("admin")) {
+            if (e.getContext().getAuthentication().getUser().getUsername().equals("")) {
                 e.setAllow(true);
             }
         }

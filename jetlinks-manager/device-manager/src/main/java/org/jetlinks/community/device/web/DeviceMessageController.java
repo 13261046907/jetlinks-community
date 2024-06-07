@@ -34,7 +34,6 @@ import java.util.function.Function;
 @RestController
 @RequestMapping("/device")
 @Slf4j
-@Authorize
 @Resource(id = "device-instance", name = "设备实例")
 @Tag(name = "设备指令API")
 @Deprecated

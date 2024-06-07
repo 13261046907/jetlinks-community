@@ -14,7 +14,6 @@ import reactor.core.publisher.Flux;
 @RestController
 @RequestMapping("/network/resources")
 @AllArgsConstructor
-@Authorize
 @Tag(name = "网络资源管理")
 public class NetworkResourceController {
 

@@ -19,8 +19,10 @@ import org.jetlinks.community.standalone.goview.v2.model.SysFile;
 import org.jetlinks.community.standalone.goview.v2.model.vo.SysFileVo;
 import org.jetlinks.community.standalone.goview.v2.service.ISysFileService;
 import org.jetlinks.community.standalone.goview.v2.util.SnowflakeIdWorker;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import reactor.core.publisher.Mono;
 
 import javax.annotation.Resource;
 import java.io.File;
@@ -72,7 +74,7 @@ public class FileController extends BaseController {
 
     @ApiOperation(value = "修改", notes = "修改")
     @PutMapping("/update")
-    public AjaxResult update(String id,@RequestBody MultipartFile object) throws IllegalStateException, IOException{
+    public AjaxResult update(@RequestParam("id") String id,@RequestParam("file") MultipartFile object) throws IllegalStateException, IOException{
         SysFile sysFile=iSysFileService.getById(id);
         if(sysFile!=null){
             String fileurl=sysFile.getAbsolutePath()+sysFile.getRelativePath()+File.separator+sysFile.getFileName();
@@ -85,17 +87,17 @@ public class FileController extends BaseController {
 
     /**
      * 上传文件
-     * @param object 文件流对象
+     * @param file 文件流对象
      * @return
      * @throws Exception
      */
     @PostMapping("/upload")
-    public AjaxResult upload(@RequestBody MultipartFile object) throws IOException{
-        String fileName = object.getOriginalFilename();
+    public AjaxResult upload(@RequestPart("file") FilePart file) throws IOException{
+        String fileName = file.filename();
         //默认文件格式
         String suffixName=v2Config.getDefaultFormat();
         String mediaKey="";
-        Long filesize= object.getSize();
+//        long fileSize = file.getSize();
         //文件名字
         String fileSuffixName="";
         if(fileName.lastIndexOf(".")!=-1) {//有后缀
@@ -114,7 +116,7 @@ public class FileController extends BaseController {
         SysFile sysFile=new SysFile();
         sysFile.setId(SnowflakeIdWorker.getUUID());
         sysFile.setFileName(fileSuffixName);
-        sysFile.setFileSize(Integer.parseInt(filesize+""));
+//        sysFile.setFileSize(Integer.parseInt(filesize+""));
         sysFile.setFileSuffix(suffixName);
         sysFile.setCreateTime(DateUtil.formatLocalDateTime(LocalDateTime.now()));
         String filepath=DateUtil.formatDate(new Date());
@@ -127,7 +129,7 @@ public class FileController extends BaseController {
             Files.createDirectory(path);
         }
         File desc = getAbsoluteFile(v2Config.getFileurl()+File.separator+filepath,fileSuffixName);
-        object.transferTo(desc);
+        file.transferTo(desc);
         SysFileVo sysFileVo=BeanUtil.copyProperties(sysFile, SysFileVo.class);
         sysFileVo.setFileurl(sysFile.getVirtualKey()+"/"+sysFile.getRelativePath()+"/"+sysFile.getFileName());
         return AjaxResult.successData(200, sysFileVo);

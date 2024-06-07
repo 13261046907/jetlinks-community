@@ -33,7 +33,7 @@ public class FileManagerController {
     private final FileManager fileManager;
 
     @PostMapping("/upload")
-    @Authorize(merge = false)
+//    @Authorize(merge = false)
     @Operation(summary = "上传文件")
     public Mono<FileInfo> upload(@RequestPart("file") Mono<FilePart> partMono) {
         return partMono.flatMap(fileManager::saveFile);

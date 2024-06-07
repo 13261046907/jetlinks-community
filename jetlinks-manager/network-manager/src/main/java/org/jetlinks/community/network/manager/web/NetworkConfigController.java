@@ -36,7 +36,6 @@ import java.util.Objects;
 @RestController
 @RequestMapping("/network/config")
 @Resource(id = "network-config", name = "网络组件配置")
-@Authorize
 @Tag(name = "网络组件管理")
 @AllArgsConstructor
 public class NetworkConfigController implements ReactiveServiceCrudController<NetworkConfigEntity, String> {

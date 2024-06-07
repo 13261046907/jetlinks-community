@@ -29,7 +29,6 @@ import reactor.core.publisher.Mono;
  */
 @RestController
 @RequestMapping("/network/certificate")
-@Authorize
 @Resource(id = "certificate", name = "证书管理")
 @Tag(name = "证书管理")
 public class CertificateController implements ReactiveServiceCrudController<CertificateEntity, String> {

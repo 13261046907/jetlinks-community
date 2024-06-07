@@ -51,7 +51,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/protocol")
-@Authorize
 @Resource(id = "protocol-supports", name = "协议管理")
 @Tag(name = "协议管理")
 public class ProtocolSupportController

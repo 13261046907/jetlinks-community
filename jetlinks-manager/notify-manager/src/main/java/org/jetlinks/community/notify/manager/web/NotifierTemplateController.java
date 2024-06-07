@@ -31,7 +31,6 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/notifier/template")
-@Authorize
 @Resource(id = "template", name = "通知模板")
 @Tag(name = "消息通知模版")
 public class NotifierTemplateController implements ReactiveServiceCrudController<NotifyTemplateEntity, String> {

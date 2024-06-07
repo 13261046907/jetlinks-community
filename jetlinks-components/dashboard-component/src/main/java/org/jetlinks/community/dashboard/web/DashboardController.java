@@ -23,7 +23,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/dashboard")
 @Resource(id="dashboard",name = "仪表盘")
-@Authorize
 public class DashboardController {
 
     private final DashboardManager dashboardManager;

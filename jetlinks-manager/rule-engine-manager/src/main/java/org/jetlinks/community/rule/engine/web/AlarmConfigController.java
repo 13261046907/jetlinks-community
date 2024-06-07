@@ -27,7 +27,6 @@ import reactor.core.publisher.Mono;
 @RestController
 @RequestMapping(value = "/alarm/config")
 @Resource(id = "alarm-config", name = "告警配置")
-@Authorize
 @Tag(name = "告警配置")
 @AllArgsConstructor
 public class AlarmConfigController implements ReactiveServiceCrudController<AlarmConfigEntity, String> {

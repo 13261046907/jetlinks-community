@@ -316,6 +316,16 @@
             <artifactId>tdengine-component</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.eclipse.paho</groupId>
+            <artifactId>org.eclipse.paho.client.mqttv3</artifactId>
+            <version>1.2.2</version>
+        </dependency>
+    <!--    <dependency>
+            <groupId>org.rxtx</groupId>
+            <artifactId>rxtx</artifactId>
+            <version>2.1.7</version>
+        </dependency>-->
     </dependencies>
 
 

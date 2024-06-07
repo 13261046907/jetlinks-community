@@ -36,7 +36,6 @@ import java.util.Comparator;
 @RestController
 @RequestMapping("/gateway/device")
 @Resource(id = "device-gateway", name = "设备接入网关")
-@Authorize
 @Tag(name = "设备接入管理")
 @AllArgsConstructor
 public class DeviceGatewayController implements ReactiveServiceCrudController<DeviceGatewayEntity, String> {

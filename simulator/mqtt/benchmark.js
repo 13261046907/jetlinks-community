@@ -1,6 +1,6 @@
 /**
  * JetLinks mqtt 官方协议模拟器
- *  benchmark mqtt --host=127.0.0.1 --port=8801 --script=mqtt/benchmark.js report=true reportLimit=100 interval=1000
+ *  benchmark mqtt --host=101.201.119.26 --port=11883 --script=mqtt/benchmark.js report=true reportLimit=100 interval=1000
  */
 
 //绑定内置参数,否则匿名函数无法使用。
@@ -58,6 +58,8 @@ function reportProperties(client) {
         "properties": data
     }
 
+    $benchmark.print("属性:"+msg);
+    $benchmark.print("client:"+client);
     //推送mqtt
     return client.publishAsync(createTopic(client, "/properties/read/report"), 0, $benchmark.toJson(msg));
 
@@ -111,6 +113,6 @@ function doPublish(client, topic, payload) {
 
 //重点! 绑定函数到benchmark
 benchmark
-    .beforeConnect(beforeConnect)
+    // .beforeConnect(beforeConnect)
     .onConnected(onConnected)
     .onComplete(onComplete);

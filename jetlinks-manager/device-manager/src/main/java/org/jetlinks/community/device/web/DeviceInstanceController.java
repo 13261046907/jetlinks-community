@@ -96,13 +96,11 @@ import java.util.stream.Collectors;
 import static org.hswebframework.reactor.excel.ReactorExcel.read;
 
 @RestController
-@RequestMapping({"/ device-instance", "/device/instance"})
-@Authorize
+@RequestMapping({"/device-instance", "/device/instance"})
 @Resource(id = "device-instance", name = "设备实例")
 @Slf4j
 @Tag(name = "设备实例接口")
-public class DeviceInstanceController implements
-    ReactiveServiceCrudController<DeviceInstanceEntity, String> {
+public class DeviceInstanceController implements ReactiveServiceCrudController<DeviceInstanceEntity, String> {
 
     @Getter
     private final LocalDeviceInstanceService service;
