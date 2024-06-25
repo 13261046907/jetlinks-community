@@ -1,5 +1,6 @@
 package org.jetlinks.community.network.mqtt.gateway.device;
 
+import com.alibaba.fastjson.JSONObject;
 import io.netty.handler.codec.mqtt.MqttConnectReturnCode;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.StatusCode;

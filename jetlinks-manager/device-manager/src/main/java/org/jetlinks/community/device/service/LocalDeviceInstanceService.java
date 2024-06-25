@@ -518,8 +518,8 @@ public class LocalDeviceInstanceService extends GenericReactiveCrudService<Devic
                 registry
                     .getDevice(device.getId())
                     //先刷新配置缓存
-                    .flatMap(operator -> operator.refreshAllConfig().thenReturn(operator))
-                    .flatMap(operator -> operator
+                    .flatMap(operator -> operator.refreshAllConfig().thenReturn(operator)),
+                    /*.flatMap(operator -> operator
                         //检查设备的真实状态,可能出现设备已经离线,但是数据库状态未及时更新的.
                         .checkState()
                         .map(DeviceState::of)
@@ -532,7 +532,7 @@ public class LocalDeviceInstanceService extends GenericReactiveCrudService<Devic
                             .set(DeviceInstanceEntity::getState, state)
                             .where(DeviceInstanceEntity::getId, device.getId())
                             .execute())
-                        .thenReturn(operator)),
+                        .thenReturn(operator)),*/
                 //配置定义
                 metadataManager
                     .getDeviceConfigMetadata(device.getId())
