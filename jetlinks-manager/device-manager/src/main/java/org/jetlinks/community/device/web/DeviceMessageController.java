@@ -1,13 +1,17 @@
 package org.jetlinks.community.device.web;
 
+import com.alibaba.fastjson.JSONObject;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.paho.client.mqttv3.MqttException;
 import org.hswebframework.web.authorization.annotation.Authorize;
 import org.hswebframework.web.authorization.annotation.Resource;
 import org.hswebframework.web.exception.BusinessException;
 import org.hswebframework.web.id.IDGenerator;
 import org.jetlinks.community.device.entity.DevicePropertiesEntity;
+import org.jetlinks.community.device.mqtt.InitCallback;
+import org.jetlinks.community.device.mqtt.MQTTConnect;
 import org.jetlinks.community.utils.ErrorUtils;
 import org.jetlinks.core.device.DeviceOperator;
 import org.jetlinks.core.device.DeviceRegistry;
@@ -41,6 +45,8 @@ public class DeviceMessageController {
 
     @Autowired
     private DeviceRegistry registry;
+    private final MQTTConnect mqttConnect = new MQTTConnect();
+    private final InitCallback initCallback = new InitCallback();
 
     //获取设备属性
     @GetMapping("/{deviceId}/property/{property:.+}")
@@ -113,6 +119,15 @@ public class DeviceMessageController {
                                    @PathVariable String functionId,
                                    @RequestBody Map<String, Object> properties) {
 
+        try {
+            mqttConnect.setMqttClient(null,null,initCallback);
+            JSONObject message = new JSONObject();
+            message.put("deviceId",deviceId);
+            message.put("properties",JSONObject.toJSON(properties));
+            mqttConnect.pub("/282090200051/10/function/invoke", message.toString());
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
         return registry
             .getDevice(deviceId)
             .switchIfEmpty(ErrorUtils.notFound("设备不存在"))
