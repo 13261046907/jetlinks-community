@@ -1,9 +1,11 @@
 package org.jetlinks.community.device.service;
 
+import com.alibaba.fastjson.JSONObject;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
+import org.eclipse.paho.client.mqttv3.MqttException;
 import org.hswebframework.ezorm.rdb.mapping.ReactiveRepository;
 import org.hswebframework.ezorm.rdb.mapping.ReactiveUpdate;
 import org.hswebframework.ezorm.rdb.mapping.defaults.SaveResult;
@@ -21,6 +23,8 @@ import org.jetlinks.community.device.entity.*;
 import org.jetlinks.community.device.enums.DeviceState;
 import org.jetlinks.community.device.events.DeviceDeployedEvent;
 import org.jetlinks.community.device.events.DeviceUnregisterEvent;
+import org.jetlinks.community.device.mqtt.InitCallback;
+import org.jetlinks.community.device.mqtt.MQTTConnect;
 import org.jetlinks.community.device.response.DeviceDeployResult;
 import org.jetlinks.community.device.response.DeviceDetail;
 import org.jetlinks.community.device.response.ResetDeviceConfigurationResult;
@@ -84,6 +88,10 @@ public class LocalDeviceInstanceService extends GenericReactiveCrudService<Devic
     private final RelationService relationService;
 
     private final TransactionalOperator transactionalOperator;
+
+    private final MQTTConnect mqttConnect = new MQTTConnect();
+    private final InitCallback initCallback = new InitCallback();
+
 
     public LocalDeviceInstanceService(DeviceRegistry registry,
                                       LocalDeviceProductService deviceProductService,
@@ -633,6 +641,15 @@ public class LocalDeviceInstanceService extends GenericReactiveCrudService<Devic
     public Mono<Map<String, Object>> writeProperties(String deviceId,
                                                      Map<String, Object> properties) {
 
+        try {
+            mqttConnect.setMqttClient(null,null,initCallback);
+            JSONObject message = new JSONObject();
+            message.put("deviceId",deviceId);
+            message.put("properties",JSONObject.toJSON(properties));
+            mqttConnect.pub("/282090200051/10/properties/report", message.toString());
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
         return registry
             .getDevice(deviceId)
             .switchIfEmpty(ErrorUtils.notFound("error.device_not_found_or_not_activated"))
