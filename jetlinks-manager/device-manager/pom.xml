@@ -99,6 +99,12 @@
             <scope>compile</scope>
         </dependency>
 
+        <!--MQTT-->
+        <dependency>
+            <groupId>org.springframework.integration</groupId>
+            <artifactId>spring-integration-mqtt</artifactId>
+        </dependency>
+        <!--MQTT-->
 
         <dependency>
             <groupId>org.jetlinks.community</groupId>
