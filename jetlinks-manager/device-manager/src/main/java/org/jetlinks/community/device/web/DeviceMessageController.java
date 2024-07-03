@@ -1,15 +1,14 @@
 package org.jetlinks.community.device.web;
 
-import com.alibaba.fastjson.JSONObject;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.MqttException;
-import org.hswebframework.web.authorization.annotation.Authorize;
 import org.hswebframework.web.authorization.annotation.Resource;
 import org.hswebframework.web.exception.BusinessException;
 import org.hswebframework.web.id.IDGenerator;
 import org.jetlinks.community.device.entity.DevicePropertiesEntity;
+import org.jetlinks.community.device.mqtt.HexConverter;
 import org.jetlinks.community.device.mqtt.InitCallback;
 import org.jetlinks.community.device.mqtt.MQTTConnect;
 import org.jetlinks.community.utils.ErrorUtils;
@@ -31,6 +30,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -121,10 +121,11 @@ public class DeviceMessageController {
 
         try {
             mqttConnect.setMqttClient(null,null,initCallback);
-            JSONObject message = new JSONObject();
-            message.put("deviceId",deviceId);
-            message.put("properties",JSONObject.toJSON(properties));
-            mqttConnect.pub("/282090200051/10/function/invoke", message.toString());
+            String openValue = properties.get("open")+"";
+            byte[] originalBytes = openValue.getBytes(StandardCharsets.UTF_8);
+            // 转换为十六进制字符串
+            String hexString = HexConverter.bytesToHex(originalBytes);
+            mqttConnect.pub("/282090200051/10/function/invoke", hexString);
         } catch (MqttException e) {
             e.printStackTrace();
         }
