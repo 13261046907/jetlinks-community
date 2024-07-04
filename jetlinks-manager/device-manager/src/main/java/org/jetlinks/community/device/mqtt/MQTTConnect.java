@@ -18,7 +18,7 @@ public class MQTTConnect {
 //  @Value("${mqtt.host}")
   private String HOST = "tcp://101.201.119.26:11883";
 //  @Value("${mqtt.clientId}")
-  private  String clientId = "10739947021";
+  private  String clientId = "jhy20240704";
 //  @Value("${mqtt.topic}")
   private  String topic = "";
   private MqttClient mqttClient;

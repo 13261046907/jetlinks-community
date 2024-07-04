@@ -640,13 +640,22 @@ public class LocalDeviceInstanceService extends GenericReactiveCrudService<Devic
     @SneakyThrows
     public Mono<Map<String, Object>> writeProperties(String deviceId,
                                                      Map<String, Object> properties) {
-
         try {
+            final String[] productId = {""};
+            Mono<DeviceDetail> deviceDetailMono = getDeviceDetail(deviceId);
+            if(!Objects.isNull(deviceDetailMono)){
+                deviceDetailMono.subscribe(
+                    detail ->{
+                        productId[0] = detail.getProductId();
+                    }
+                );
+            }
             mqttConnect.setMqttClient(null,null,initCallback);
             JSONObject message = new JSONObject();
             message.put("deviceId",deviceId);
             message.put("properties",JSONObject.toJSON(properties));
-            mqttConnect.pub("/282090200051/10/properties/report", message.toString());
+            String topic = "/" + productId[0] + "/" + deviceId + "/properties/report";
+            mqttConnect.pub(topic, message.toString());
         } catch (MqttException e) {
             e.printStackTrace();
         }

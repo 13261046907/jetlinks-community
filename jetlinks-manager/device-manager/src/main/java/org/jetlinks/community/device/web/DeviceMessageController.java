@@ -17,10 +17,8 @@ import org.jetlinks.core.device.DeviceRegistry;
 import org.jetlinks.core.enums.ErrorCode;
 import org.jetlinks.core.exception.DeviceOperationException;
 import org.jetlinks.core.message.DeviceMessageReply;
-import org.jetlinks.core.message.FunctionInvokeMessageSender;
 import org.jetlinks.core.message.ReadPropertyMessageSender;
 import org.jetlinks.core.message.WritePropertyMessageSender;
-import org.jetlinks.core.message.function.FunctionInvokeMessageReply;
 import org.jetlinks.core.message.property.ReadPropertyMessageReply;
 import org.jetlinks.core.message.property.WritePropertyMessageReply;
 import org.jetlinks.core.metadata.PropertyMetadata;
@@ -47,7 +45,6 @@ public class DeviceMessageController {
     private DeviceRegistry registry;
     private final MQTTConnect mqttConnect = new MQTTConnect();
     private final InitCallback initCallback = new InitCallback();
-
     //获取设备属性
     @GetMapping("/{deviceId}/property/{property:.+}")
     @SneakyThrows
@@ -125,22 +122,14 @@ public class DeviceMessageController {
             byte[] originalBytes = openValue.getBytes(StandardCharsets.UTF_8);
             // 转换为十六进制字符串
             String hexString = HexConverter.bytesToHex(originalBytes);
-            mqttConnect.pub("/282090200051/10/function/invoke", hexString);
+            String topic = "/" + deviceId + "function/invoke";
+            mqttConnect.pub(topic, hexString);
         } catch (MqttException e) {
             e.printStackTrace();
         }
         return registry
-            .getDevice(deviceId)
-            .switchIfEmpty(ErrorUtils.notFound("设备不存在"))
-            .flatMap(operator -> operator
-                .messageSender()
-                .invokeFunction(functionId)
-                .messageId(IDGenerator.SNOW_FLAKE_STRING.generate())
-                .setParameter(properties)
-                .validate()
-            )
-            .flatMapMany(FunctionInvokeMessageSender::send)
-            .map(mapReply(FunctionInvokeMessageReply::getOutput));
+            .getDevice(deviceId).flux();
+
     }
 
     //获取设备所有属性
