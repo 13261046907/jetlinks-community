@@ -48,9 +48,9 @@ public class DeviceStatusMeasurementProvider extends StaticMeasurementProvider {
     public Mono<Void> incrementOffline(DeviceMessage msg) {
         return Mono.fromRunnable(() -> {
             String productId = parseProductId(msg);
-            registry
-                .counter("offline", "productId", productId)
-                .increment();
+//            registry
+//                .counter("offline", "productId", productId)
+//                .increment();
         });
     }
 

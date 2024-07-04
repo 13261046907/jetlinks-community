@@ -122,7 +122,8 @@ public class DeviceMessageController {
             byte[] originalBytes = openValue.getBytes(StandardCharsets.UTF_8);
             // 转换为十六进制字符串
             String hexString = HexConverter.bytesToHex(originalBytes);
-            String topic = "/" + deviceId + "function/invoke";
+            String topic = "/" + deviceId + "/function/invoke";
+            log.info("invokedFunction-topic:{},message:{}",topic,hexString);
             mqttConnect.pub(topic, hexString);
         } catch (MqttException e) {
             e.printStackTrace();

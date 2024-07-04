@@ -655,6 +655,7 @@ public class LocalDeviceInstanceService extends GenericReactiveCrudService<Devic
             message.put("deviceId",deviceId);
             message.put("properties",JSONObject.toJSON(properties));
             String topic = "/" + productId[0] + "/" + deviceId + "/properties/report";
+            log.info("writeProperties-topic:{},message:{}",topic,message.toString());
             mqttConnect.pub(topic, message.toString());
         } catch (MqttException e) {
             e.printStackTrace();
