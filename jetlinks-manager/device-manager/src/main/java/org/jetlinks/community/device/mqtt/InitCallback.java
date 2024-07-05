@@ -20,14 +20,7 @@ public class InitCallback implements MqttCallback {
    */
   @Override
   public void connectionLost(Throwable cause) {
-      try {
-          MQTTConnect mqttConnect = new MQTTConnect();
-          mqttConnect.setMqttClient(null,null,null);
-          log.info("MQTT重新连接成功！");
-      } catch (MqttException e) {
-          log.error("MQTT启动连接失败！");
-          log.error(e.getMessage(), e);
-      }
+
   }
 
   /**
