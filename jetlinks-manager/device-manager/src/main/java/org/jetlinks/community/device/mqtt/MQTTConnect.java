@@ -16,11 +16,8 @@ import java.nio.charset.Charset;
 @Data
 public class MQTTConnect {
 
-//  @Value("${mqtt.host}")
-  private String HOST = "tcp://mqtt.tsjhjs.cn:28083";
-//  @Value("${mqtt.clientId}")
-  private  String clientId = "jhy2024070411";
-//  @Value("${mqtt.topic}")
+  private String HOST = "tcp://mqtt.tsjhjs.cn:11883";
+  private  String clientId = "jhy202407062011zhihui";
   private  String topic = "";
   private MqttClient mqttClient;
 
@@ -49,12 +46,12 @@ public class MQTTConnect {
       throws MqttException {
     mqttClient = new MqttClient(HOST, clientId, new MemoryPersistence());
     MqttConnectOptions options = new MqttConnectOptions();
-//    options.setUserName(userName);
-//    options.setPassword(passWord.toCharArray());
-    options.setConnectionTimeout(10);///默认：30
+    options.setUserName(userName);
+    options.setPassword(passWord.toCharArray());
+    options.setConnectionTimeout(30);///默认：30
     options.setAutomaticReconnect(true);//默认：false
     options.setCleanSession(false);//默认：true
-    //options.setKeepAliveInterval(20);//默认：60
+    options.setKeepAliveInterval(60);//默认：60
     return options;
   }
 

@@ -23,7 +23,6 @@ import org.jetlinks.community.device.entity.*;
 import org.jetlinks.community.device.enums.DeviceState;
 import org.jetlinks.community.device.events.DeviceDeployedEvent;
 import org.jetlinks.community.device.events.DeviceUnregisterEvent;
-import org.jetlinks.community.device.mqtt.InitCallback;
 import org.jetlinks.community.device.mqtt.MQTTConnect;
 import org.jetlinks.community.device.response.DeviceDeployResult;
 import org.jetlinks.community.device.response.DeviceDetail;
@@ -53,6 +52,7 @@ import org.jetlinks.core.utils.CyclicDependencyChecker;
 import org.jetlinks.reactor.ql.utils.CastUtils;
 import org.jetlinks.supports.official.JetLinksDeviceMetadataCodec;
 import org.reactivestreams.Publisher;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
@@ -89,9 +89,8 @@ public class LocalDeviceInstanceService extends GenericReactiveCrudService<Devic
 
     private final TransactionalOperator transactionalOperator;
 
-    private final MQTTConnect mqttConnect = new MQTTConnect();
-    private final InitCallback initCallback = new InitCallback();
-
+    @Autowired
+    private MQTTConnect mqttConnect;
 
     public LocalDeviceInstanceService(DeviceRegistry registry,
                                       LocalDeviceProductService deviceProductService,
@@ -650,7 +649,7 @@ public class LocalDeviceInstanceService extends GenericReactiveCrudService<Devic
                     }
                 );
             }
-            mqttConnect.setMqttClient(null,null,initCallback);
+//            mqttConnect.setMqttClient(MqttConstant.MQTT_USERNAME, MqttConstant.MQTT_PASSWORD, null);
             JSONObject message = new JSONObject();
             message.put("deviceId",deviceId);
             message.put("properties",JSONObject.toJSON(properties));

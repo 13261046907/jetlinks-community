@@ -43,7 +43,8 @@ public class DeviceMessageController {
 
     @Autowired
     private DeviceRegistry registry;
-    private final MQTTConnect mqttConnect = new MQTTConnect();
+    @Autowired
+    private MQTTConnect mqttConnect;
     private final InitCallback initCallback = new InitCallback();
     //获取设备属性
     @GetMapping("/{deviceId}/property/{property:.+}")
@@ -117,7 +118,7 @@ public class DeviceMessageController {
                                    @RequestBody Map<String, Object> properties) {
 
         try {
-            mqttConnect.setMqttClient(null,null,initCallback);
+//            mqttConnect.setMqttClient(MqttConstant.MQTT_USERNAME, MqttConstant.MQTT_PASSWORD, initCallback);
             String openValue = properties.get("open")+"";
             byte[] originalBytes = openValue.getBytes(StandardCharsets.UTF_8);
             // 转换为十六进制字符串
