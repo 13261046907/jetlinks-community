@@ -1,5 +1,5 @@
 server:
-  port: 8848
+    port: 8848
 v2:
     #虚拟路径映射路径 2个文件路径一一对应 第一个为主存储，其他为配置相关
     xnljmap:
@@ -14,8 +14,8 @@ v2:
     httpurl: http://127.0.0.1:8083/
     defaultFormat: .png
 spring:
-  main:
-   allow-circular-references: true
+    main:
+        allow-circular-references: true
     profiles:
         active: dev
     servlet:
@@ -126,7 +126,7 @@ hsweb:
     file:
         upload:
             static-file-path: ./static/upload
-            static-location: http://127.0.0.1:${server.port}/data/zhihui/upload/
+            static-location: http://127.0.0.1:${server.port}/upload
     webflux:
         response-wrapper:
             enabled: true #开启响应包装器(将返回值包装为ResponseMessage)
@@ -154,119 +154,119 @@ hsweb:
         redis:
             local-cache-type: guava
 file:
-  manager:
-    storage-base-path: ./data/files
+    manager:
+        storage-base-path: ./data/files
 api:
-  # 访问api接口的根地址
-  base-path: http://127.0.0.1:${server.port}
+    # 访问api接口的根地址
+    base-path: http://127.0.0.1:${server.port}
 
 jetlinks:
-  server-id: ${spring.application.name}:${server.port} #设备服务网关服务ID,不同服务请设置不同的ID
-  logging:
-    system:
-      context:
-        server: ${spring.application.name}
-  protocol:
-    spi:
-      enabled: true # 为true时开启自动加载通过依赖引入的协议包
+    server-id: ${spring.application.name}:${server.port} #设备服务网关服务ID,不同服务请设置不同的ID
+    logging:
+        system:
+            context:
+                server: ${spring.application.name}
+    protocol:
+        spi:
+            enabled: true # 为true时开启自动加载通过依赖引入的协议包
 logging:
-  level:
-    org.jetlinks: debug
-    rule.engine: debug
-    org.hswebframework: debug
-    org.springframework.transaction: debug
-    org.springframework.data.r2dbc.connectionfactory: warn
-    io.micrometer: warn
-    org.hswebframework.expands: error
-    system: debug
-    org.jetlinks.rule.engine: warn
-    org.jetlinks.supports.event: warn
-    org.springframework: warn
-    org.jetlinks.community.device.message.writer: warn
-    org.jetlinks.community.timeseries.micrometer: warn
-    org.jetlinks.community.elastic.search.service.reactive: trace
-    org.jetlinks.community.network: warn
-    io.vertx.mqtt.impl: warn
-    org.jetlinks.supports.scalecube.rpc: warn
-    "org.jetlinks.community.buffer": debug
-    org.elasticsearch: error
-    org.elasticsearch.deprecation: off
-    "io.vertx.core.impl.ContextImpl": off
-    "org.hswebframework.web.starter.jackson": warn
-  config: classpath:logback-spring.xml
+    level:
+        org.jetlinks: debug
+        rule.engine: debug
+        org.hswebframework: debug
+        org.springframework.transaction: debug
+        org.springframework.data.r2dbc.connectionfactory: warn
+        io.micrometer: warn
+        org.hswebframework.expands: error
+        system: debug
+        org.jetlinks.rule.engine: warn
+        org.jetlinks.supports.event: warn
+        org.springframework: warn
+        org.jetlinks.community.device.message.writer: warn
+        org.jetlinks.community.timeseries.micrometer: warn
+        org.jetlinks.community.elastic.search.service.reactive: trace
+        org.jetlinks.community.network: warn
+        io.vertx.mqtt.impl: warn
+        org.jetlinks.supports.scalecube.rpc: warn
+        "org.jetlinks.community.buffer": debug
+        org.elasticsearch: error
+        org.elasticsearch.deprecation: off
+        "io.vertx.core.impl.ContextImpl": off
+        "org.hswebframework.web.starter.jackson": warn
+    config: classpath:logback-spring.xml
 vertx:
-  max-event-loop-execute-time-unit: seconds
-  max-event-loop-execute-time: 30
-  max-worker-execute-time-unit: seconds
-  max-worker-execute-time: 30
-  prefer-native-transport: true
+    max-event-loop-execute-time-unit: seconds
+    max-event-loop-execute-time: 30
+    max-worker-execute-time-unit: seconds
+    max-worker-execute-time: 30
+    prefer-native-transport: true
 micrometer:
-  time-series:
-    tags:
-      server: ${spring.application.name}
-    metrics:
-      default:
-        step: 30s
+    time-series:
+        tags:
+            server: ${spring.application.name}
+        metrics:
+            default:
+                step: 30s
 system:
-  config:
-    scopes:
-      - id: front
-        name: 前端配置
-        public-access: true
-      - id: paths
-        name: 访问路径配置
-        public-access: true
-        properties:
-          - key: base-path
-            name: 接口根路径
-            default-value: http://127.0.0.1:9000/api
-      - id: amap
-        name: 高德地图配置
-        public-access: false
-        properties:
-          - key: apiKey # 配置id
-            name: 高德地图ApiKey # 名称
+    config:
+        scopes:
+            - id: front
+              name: 前端配置
+              public-access: true
+            - id: paths
+              name: 访问路径配置
+              public-access: true
+              properties:
+                  - key: base-path
+                    name: 接口根路径
+                    default-value: http://127.0.0.1:9000/api
+            - id: amap
+              name: 高德地图配置
+              public-access: false
+              properties:
+                  - key: apiKey # 配置id
+                    name: 高德地图ApiKey # 名称
 management:
-  health:
-    elasticsearch:
-      enabled: false  # 关闭elasticsearch健康检查
+    health:
+        elasticsearch:
+            enabled: false  # 关闭elasticsearch健康检查
 springdoc:
-  swagger-ui:
-    path: /swagger-ui.html
-  #  packages-to-scan: org.jetlinks
-  group-configs:
-    - group: 设备管理相关接口
-      packages-to-scan:
-        - org.jetlinks.community.device
-      paths-to-exclude:
-        - /device-instance/**
-        - /device-product/**
-        - /protocol/**
-    - group: 规则引擎相关接口
-      packages-to-scan: org.jetlinks.community.rule.engine.web
-      paths-to-exclude: /api/**
-    - group: 通知管理相关接口
-      packages-to-scan: org.jetlinks.community.notify.manager.web
-    - group: 设备接入相关接口
-      packages-to-scan:
-        - org.jetlinks.community.network.manager.web
-        - org.jetlinks.community.device.web
-      paths-to-match:
-        - /gateway/**
-        - /network/**
-        - /protocol/**
-    - group: 系统管理相关接口
-      packages-to-scan:
-        - org.jetlinks.community.auth
-        - org.hswebframework.web.system.authorization.defaults.webflux
-        - org.hswebframework.web.file
-        - org.jetlinks.community.io.file.web
-        - org.hswebframework.web.authorization.basic.web
-        - org.jetlinks.community.logging.controller
-  cache:
-    disabled: false
+    swagger-ui:
+        path: /swagger-ui.html
+    #  packages-to-scan: org.jetlinks
+    group-configs:
+        - group: 设备管理相关接口
+          packages-to-scan:
+              - org.jetlinks.community.device
+          paths-to-exclude:
+              - /device-instance/**
+              - /device-product/**
+              - /protocol/**
+        - group: 规则引擎相关接口
+          packages-to-scan: org.jetlinks.community.rule.engine.web
+          paths-to-exclude: /api/**
+        - group: 通知管理相关接口
+          packages-to-scan: org.jetlinks.community.notify.manager.web
+        - group: 设备接入相关接口
+          packages-to-scan:
+              - org.jetlinks.community.network.manager.web
+              - org.jetlinks.community.device.web
+          paths-to-match:
+              - /gateway/**
+              - /network/**
+              - /protocol/**
+        - group: 系统管理相关接口
+          packages-to-scan:
+              - org.jetlinks.community.auth
+              - org.hswebframework.web.system.authorization.defaults.webflux
+              - org.hswebframework.web.file
+              - org.jetlinks.community.io.file.web
+              - org.hswebframework.web.authorization.basic.web
+              - org.jetlinks.community.logging.controller
+    cache:
+        disabled: false
 network:
-  resources:
-    - 1883-1890
-    - 8800-8810
-    - 5060-5061
+    resources:
+        - 1883-1890
+        - 8800-8810
+        - 5060-5061
