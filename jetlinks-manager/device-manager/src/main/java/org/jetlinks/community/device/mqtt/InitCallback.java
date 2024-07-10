@@ -1,13 +1,11 @@
 package org.jetlinks.community.device.mqtt;
 
+import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
-import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.springframework.stereotype.Component;
-
-import java.nio.charset.Charset;
 
 /**
  * MQTT回调函数
@@ -37,6 +35,6 @@ public class InitCallback implements MqttCallback {
    */
   @Override
   public void messageArrived(String topic, MqttMessage message) {
-      log.info("TOPIC: [{}] 消息: {}", topic, new String(message.getPayload(), Charset.forName("GBK")));
+      log.info("TOPIC: [{}] 消息: {}", topic, message);
   }
 }

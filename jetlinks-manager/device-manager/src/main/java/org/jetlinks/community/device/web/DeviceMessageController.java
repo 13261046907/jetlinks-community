@@ -120,12 +120,12 @@ public class DeviceMessageController {
         try {
 //            mqttConnect.setMqttClient(MqttConstant.MQTT_USERNAME, MqttConstant.MQTT_PASSWORD, initCallback);
             String openValue = properties.get("open")+"";
-            byte[] originalBytes = openValue.getBytes(StandardCharsets.UTF_8);
+//            byte[] originalBytes = openValue.getBytes(StandardCharsets.UTF_8);
             // 转换为十六进制字符串
-            String hexString = HexConverter.bytesToHex(originalBytes);
+//            String hexString = HexConverter.bytesToHex(originalBytes);
             String topic = "/" + deviceId + "/function/invoke";
-            log.info("invokedFunction-topic:{},message:{}",topic,hexString);
-            mqttConnect.pub(topic, hexString);
+            log.info("invokedFunction-topic:{},message:{}",topic,openValue);
+            mqttConnect.pub(topic, openValue+"");
         } catch (MqttException e) {
             e.printStackTrace();
         }
