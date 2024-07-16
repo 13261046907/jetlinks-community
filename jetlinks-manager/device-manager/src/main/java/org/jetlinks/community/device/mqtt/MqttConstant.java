@@ -1,7 +1,5 @@
 package org.jetlinks.community.device.mqtt;
 
-import java.nio.charset.StandardCharsets;
-
 public class MqttConstant {
 
     public static final String MQTT_USERNAME = "zhihui";
