@@ -1,14 +1,16 @@
 package org.jetlinks.community.device.web;
 
+import com.alibaba.fastjson.JSONObject;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.hswebframework.web.authorization.annotation.Resource;
 import org.hswebframework.web.exception.BusinessException;
 import org.hswebframework.web.id.IDGenerator;
 import org.jetlinks.community.device.entity.DevicePropertiesEntity;
-import org.jetlinks.community.device.mqtt.HexConverter;
 import org.jetlinks.community.device.mqtt.InitCallback;
 import org.jetlinks.community.device.mqtt.MQTTConnect;
 import org.jetlinks.community.utils.ErrorUtils;
@@ -28,7 +30,6 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -120,12 +121,16 @@ public class DeviceMessageController {
         try {
 //            mqttConnect.setMqttClient(MqttConstant.MQTT_USERNAME, MqttConstant.MQTT_PASSWORD, initCallback);
             String openValue = properties.get("open")+"";
-            byte[] originalBytes = openValue.getBytes(StandardCharsets.UTF_8);
+//            String ascii = StringToAscii(openValue);
+           /* byte[] originalBytes = openValue.getBytes(StandardCharsets.UTF_8);
             // 转换为十六进制字符串
-            String hexString = HexConverter.bytesToHex(originalBytes);
+            String hexString = HexConverter.bytesToHex(originalBytes);*/
+            byte[] payload = hexStringToByteArray(openValue);
+            MqttMessage message = new MqttMessage(payload);
+            log.info("message:{}",JSONObject.toJSON(message));
             String topic = "/" + deviceId + "/function/invoke";
-            log.info("invokedFunction-topic:{},message:{}",topic,hexString);
-            mqttConnect.pub(topic, hexString+"");
+            log.info("invokedFunction-topic:{},message:{}",topic,message);
+            mqttConnect.pub(topic, message);
         } catch (MqttException e) {
             e.printStackTrace();
         }
@@ -166,5 +171,42 @@ public class DeviceMessageController {
             }
             return mapped;
         };
+    }
+
+
+    public byte[] hexStringToByteArray(String hexString) {
+        int length = hexString.length();
+        byte[] byteArray = new byte[length / 2];
+        for (int i = 0; i < length; i += 2) {
+            byteArray[i / 2] = (byte) ((Character.digit(hexString.charAt(i), 16) << 4)
+                + Character.digit(hexString.charAt(i+1), 16));
+        }
+        return byteArray;
+    }
+
+    public String StringToAscii(String hex) {
+        String result = "";
+        for (int i = 0; i < hex.length(); i += 2) {
+            String hexByte = hex.substring(i, i + 2);
+            int decimal = Integer.parseInt(hexByte, 16);
+            if(StringUtils.isNotBlank(result)){
+                result = result+" "+decimal;
+            }else {
+                result = decimal+"";
+            }
+            System.out.println("Hexadecimal: " + hexByte + "  Decimal: " + decimal);
+        }
+        System.out.println("十进制:"+result);
+        String[] parts = result.split(" ");
+        int[] intArray = new int[parts.length];
+        for (int i = 0; i < parts.length; i++) {
+            intArray[i] = Integer.parseInt(parts[i]);
+        }
+        String ascii = "";
+        for (int num : intArray) {
+            char asciiChar = (char) num;
+            ascii = ascii + asciiChar;
+        }
+       return ascii;
     }
 }

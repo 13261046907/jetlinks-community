@@ -7,6 +7,8 @@ import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
+
 /**
  * MQTT回调函数
  */
@@ -35,6 +37,55 @@ public class InitCallback implements MqttCallback {
    */
   @Override
   public void messageArrived(String topic, MqttMessage message) {
-      log.info("TOPIC: [{}] 消息: {}", topic, message);
+      String convertedHexString = byteArrayToHexString(message.getPayload());
+      System.out.println("Converted Hex String: " + convertedHexString);
+      log.info("message:{}",JSONObject.toJSON(message));
+      log.info("TOPIC: [{}] 消息: {}", topic, convertedHexString);
   }
+
+    public static void main(String[] args) {
+        String hexString = "030301F4000285E7";
+        byte[] byteArray = hexStringToByteArray(hexString);
+        System.out.println("Byte Array: " + Arrays.toString(byteArray));
+
+        String convertedHexString = byteArrayToHexString(byteArray);
+        System.out.println("Converted Hex String: " + convertedHexString);
+
+        byte[] payload = hexStringToByteArray("030301F4000285E7");
+        MqttMessage message = new MqttMessage(payload);
+        System.out.println(JSONObject.toJSON(message));
+        JSONObject json = new JSONObject();
+        json.put("retained", message.isRetained());
+        json.put("qos", message.getQos());
+
+        StringBuilder payloadBuilder = new StringBuilder();
+        for (byte b : message.getPayload()) {
+            payloadBuilder.append(String.format("%02X", b));
+        }
+        json.put("payload", payloadBuilder.toString());
+        json.put("duplicate", message.isDuplicate());
+        json.put("id", message.getId());
+
+        MqttMessage mqttMessage = JSONObject.parseObject(json.toString(), MqttMessage.class);
+        System.out.println(json.toJSONString());
+    }
+
+    public static byte[] hexStringToByteArray(String hexString) {
+        int length = hexString.length();
+        byte[] byteArray = new byte[length / 2];
+        for (int i = 0; i < length; i += 2) {
+            byteArray[i / 2] = (byte) ((Character.digit(hexString.charAt(i), 16) << 4)
+                + Character.digit(hexString.charAt(i+1), 16));
+        }
+        return byteArray;
+    }
+
+    public static String byteArrayToHexString(byte[] byteArray) {
+        StringBuilder hexString = new StringBuilder(2 * byteArray.length);
+        for (byte b : byteArray) {
+            hexString.append(String.format("%02X", b));
+        }
+        return hexString.toString();
+    }
 }
+

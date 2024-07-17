@@ -80,6 +80,11 @@ public class MQTTConnect {
     MqttDeliveryToken token = mqttTopic.publish(mqttMessage);
     token.waitForCompletion();
   }
+  public void pub(String topic,MqttMessage mqttMessage) throws MqttException {
+        MqttTopic mqttTopic = mqttClient.getTopic(topic);
+        MqttDeliveryToken token = mqttTopic.publish(mqttMessage);
+        token.waitForCompletion();
+    }
   public void pub(String topic, String msg, int qos) throws MqttException {
     MqttMessage mqttMessage = new MqttMessage();
     mqttMessage.setQos(qos);
