@@ -7,6 +7,7 @@ import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.springframework.stereotype.Component;
 
+import java.text.DecimalFormat;
 import java.util.Arrays;
 
 /**
@@ -38,37 +39,50 @@ public class InitCallback implements MqttCallback {
   @Override
   public void messageArrived(String topic, MqttMessage message) {
       String convertedHexString = byteArrayToHexString(message.getPayload());
-      System.out.println("Converted Hex String: " + convertedHexString);
-      log.info("message:{}",JSONObject.toJSON(message));
       log.info("TOPIC: [{}] 消息: {}", topic, convertedHexString);
+      if(convertedHexString.length() > 14){
+          String temperature = convertedHexString.substring(10, 14);
+          String humidity = convertedHexString.substring(6, 10);
+          String temperatureStr = hexToStr(temperature);
+          String humidityStr = hexToStr(humidity);
+          log.info("温度:{},湿度:{}",temperatureStr,humidityStr);
+      }
   }
 
-    public static void main(String[] args) {
-        String hexString = "030301F4000285E7";
-        byte[] byteArray = hexStringToByteArray(hexString);
-        System.out.println("Byte Array: " + Arrays.toString(byteArray));
+  private String hexToStr(String hexValue){
+      int decValue = Integer.parseInt(hexValue, 16);
+      double dividedByTen = (double) decValue / 10.0;
+      DecimalFormat df = new DecimalFormat("#.00");
+      String result = df.format(dividedByTen);
+      return result;
+  }
 
-        String convertedHexString = byteArrayToHexString(byteArray);
-        System.out.println("Converted Hex String: " + convertedHexString);
+  public static void main(String[] args) {
+    String hexString = "030301F4000285E7";
+    byte[] byteArray = hexStringToByteArray(hexString);
+    System.out.println("Byte Array: " + Arrays.toString(byteArray));
 
-        byte[] payload = hexStringToByteArray("030301F4000285E7");
-        MqttMessage message = new MqttMessage(payload);
-        System.out.println(JSONObject.toJSON(message));
-        JSONObject json = new JSONObject();
-        json.put("retained", message.isRetained());
-        json.put("qos", message.getQos());
+    String convertedHexString = byteArrayToHexString(byteArray);
+    System.out.println("Converted Hex String: " + convertedHexString);
 
-        StringBuilder payloadBuilder = new StringBuilder();
-        for (byte b : message.getPayload()) {
-            payloadBuilder.append(String.format("%02X", b));
-        }
-        json.put("payload", payloadBuilder.toString());
-        json.put("duplicate", message.isDuplicate());
-        json.put("id", message.getId());
+    byte[] payload = hexStringToByteArray("030301F4000285E7");
+    MqttMessage message = new MqttMessage(payload);
+    System.out.println(JSONObject.toJSON(message));
+    JSONObject json = new JSONObject();
+    json.put("retained", message.isRetained());
+    json.put("qos", message.getQos());
 
-        MqttMessage mqttMessage = JSONObject.parseObject(json.toString(), MqttMessage.class);
-        System.out.println(json.toJSONString());
+    StringBuilder payloadBuilder = new StringBuilder();
+    for (byte b : message.getPayload()) {
+        payloadBuilder.append(String.format("%02X", b));
     }
+    json.put("payload", payloadBuilder.toString());
+    json.put("duplicate", message.isDuplicate());
+    json.put("id", message.getId());
+
+    MqttMessage mqttMessage = JSONObject.parseObject(json.toString(), MqttMessage.class);
+    System.out.println(json.toJSONString());
+ }
 
     public static byte[] hexStringToByteArray(String hexString) {
         int length = hexString.length();
