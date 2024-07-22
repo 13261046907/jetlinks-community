@@ -40,12 +40,16 @@ public class InitCallback implements MqttCallback {
   public void messageArrived(String topic, MqttMessage message) {
       String convertedHexString = byteArrayToHexString(message.getPayload());
       log.info("TOPIC: [{}] 消息: {}", topic, convertedHexString);
-      if(convertedHexString.length() > 14){
-          String temperature = convertedHexString.substring(10, 14);
-          String humidity = convertedHexString.substring(6, 10);
-          String temperatureStr = hexToStr(temperature);
-          String humidityStr = hexToStr(humidity);
-          log.info("温度:{},湿度:{}",temperatureStr,humidityStr);
+      if("/10/properties/report".equals(topic)){
+          if(convertedHexString.length() > 14){
+              String temperature = convertedHexString.substring(10, 14);
+              String humidity = convertedHexString.substring(6, 10);
+              String temperatureStr = hexToStr(temperature);
+              String humidityStr = hexToStr(humidity);
+              log.info("温度:{},湿度:{}",temperatureStr,humidityStr);
+          }
+      }else {
+
       }
   }
 
