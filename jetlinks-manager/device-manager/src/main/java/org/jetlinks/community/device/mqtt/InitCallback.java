@@ -51,17 +51,27 @@ public class InitCallback implements MqttCallback {
           String[] parts = topic.split("/");
           String deviceId = parts[1];  // 设备id
           if(convertedHexString.length() > 14){
-              String temperature = convertedHexString.substring(10, 14);
               String humidity = convertedHexString.substring(6, 10);
+              String temperature = convertedHexString.substring(10, 14);
+              String noise = convertedHexString.substring(14, 18);
+              String co2= convertedHexString.substring(18, 22);
               String temperatureStr = hexToStr(temperature);
               String humidityStr = hexToStr(humidity);
-              log.info("温度:{},湿度:{}",temperatureStr,humidityStr);
+              String noiseStr = hexToStr(noise);
+              String co2Str = hexToStr(co2);
+              log.info("湿度:{},温度:{},噪声值:{},二氧化碳值:{}",humidityStr,temperatureStr,noiseStr,co2Str);
               Map<String, Object> temperatureProperties = new HashMap<>();
               temperatureProperties.put("temperature",temperatureStr);
               syncSendMessageToDevice(deviceId,JSONObject.toJSONString(temperatureProperties));
               Map<String, Object> humidityProperties = new HashMap<>();
-              humidityProperties.put("temperature",temperatureStr);
+              humidityProperties.put("humidity",humidityStr);
               syncSendMessageToDevice(deviceId,JSONObject.toJSONString(humidityProperties));
+              Map<String, Object> noiseProperties = new HashMap<>();
+              noiseProperties.put("noise",noiseStr);
+              syncSendMessageToDevice(deviceId,JSONObject.toJSONString(noiseProperties));
+              Map<String, Object> co2Properties = new HashMap<>();
+              co2Properties.put("co2",co2Str);
+              syncSendMessageToDevice(deviceId,JSONObject.toJSONString(co2Properties));
           }
       }else {
 
