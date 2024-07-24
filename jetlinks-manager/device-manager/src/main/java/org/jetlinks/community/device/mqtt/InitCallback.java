@@ -2,7 +2,6 @@ package org.jetlinks.community.device.mqtt;
 
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Component;
 import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -58,13 +56,20 @@ public class InitCallback implements MqttCallback {
               String temperatureStr = hexToStr(temperature);
               String humidityStr = hexToStr(humidity);
               log.info("温度:{},湿度:{}",temperatureStr,humidityStr);
-              Map<String, Object> properties = new HashMap<>();
-              properties.put("temperature",temperatureStr);
-              HttpUtils.sendPost("http://127.0.0.1:8848/device/instance/"+deviceId+"/property",JSONObject.toJSONString(properties));
+              Map<String, Object> temperatureProperties = new HashMap<>();
+              temperatureProperties.put("temperature",temperatureStr);
+              syncSendMessageToDevice(deviceId,JSONObject.toJSONString(temperatureProperties));
+              Map<String, Object> humidityProperties = new HashMap<>();
+              humidityProperties.put("temperature",temperatureStr);
+              syncSendMessageToDevice(deviceId,JSONObject.toJSONString(humidityProperties));
           }
       }else {
 
       }
+  }
+
+  private void syncSendMessageToDevice(String deviceId,String message){
+      HttpUtils.sendPost("http://127.0.0.1:8848/device/instance/"+deviceId+"/property",message);
   }
 
   private String hexToStr(String hexValue){
