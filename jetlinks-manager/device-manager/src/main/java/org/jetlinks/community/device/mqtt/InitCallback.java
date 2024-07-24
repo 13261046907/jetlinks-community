@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import java.text.DecimalFormat;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -57,16 +58,9 @@ public class InitCallback implements MqttCallback {
               String temperatureStr = hexToStr(temperature);
               String humidityStr = hexToStr(humidity);
               log.info("温度:{},湿度:{}",temperatureStr,humidityStr);
-              Map<String, Object> temperatureProperties = new LinkedHashMap<>();
-              temperatureProperties.put("temperature",temperatureStr);
-              Map<String, Object> humidityProperties = new LinkedHashMap();
-              humidityProperties.put("humidity",humidityStr);
-              if(StringUtils.isNotBlank(temperatureStr)){
-                  service.writeProperties(deviceId, temperatureProperties);
-              }
-              if(StringUtils.isNotBlank(humidityStr)){
-                  service.writeProperties(deviceId, humidityProperties);
-              }
+              Map<String, Object> properties = new HashMap<>();
+              properties.put("temperature",temperatureStr);
+              HttpUtils.sendPost("http://127.0.0.1:8848/device/instance/"+deviceId+"/property",JSONObject.toJSONString(properties));
           }
       }else {
 
