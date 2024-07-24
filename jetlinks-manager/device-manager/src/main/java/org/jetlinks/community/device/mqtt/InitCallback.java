@@ -2,13 +2,18 @@ package org.jetlinks.community.device.mqtt;
 
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.jetlinks.community.device.service.LocalDeviceInstanceService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.text.DecimalFormat;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * MQTT回调函数
@@ -16,6 +21,9 @@ import java.util.Arrays;
 @Slf4j
 @Component
 public class InitCallback implements MqttCallback {
+    @Autowired
+    private  LocalDeviceInstanceService service;
+
   /**
    * MQTT 断开连接会执行此方法
    */
@@ -41,12 +49,24 @@ public class InitCallback implements MqttCallback {
       String convertedHexString = byteArrayToHexString(message.getPayload());
       log.info("TOPIC: [{}] 消息: {}", topic, convertedHexString);
       if("/10/properties/report".equals(topic)){
+          String[] parts = topic.split("/");
+          String deviceId = parts[1];  // 设备id
           if(convertedHexString.length() > 14){
               String temperature = convertedHexString.substring(10, 14);
               String humidity = convertedHexString.substring(6, 10);
               String temperatureStr = hexToStr(temperature);
               String humidityStr = hexToStr(humidity);
               log.info("温度:{},湿度:{}",temperatureStr,humidityStr);
+              Map<String, Object> temperatureProperties = new LinkedHashMap<>();
+              temperatureProperties.put("temperature",temperatureStr);
+              Map<String, Object> humidityProperties = new LinkedHashMap();
+              humidityProperties.put("humidity",humidityStr);
+              if(StringUtils.isNotBlank(temperatureStr)){
+                  service.writeProperties(deviceId, temperatureProperties);
+              }
+              if(StringUtils.isNotBlank(humidityStr)){
+                  service.writeProperties(deviceId, humidityProperties);
+              }
           }
       }else {
 
@@ -62,6 +82,11 @@ public class InitCallback implements MqttCallback {
   }
 
   public static void main(String[] args) {
+      String url = "/101010/properties/report";
+      String[] parts = url.split("/");
+      String value = parts[1];  // 结果为 "10"
+      System.out.println(value);
+
     String hexString = "030301F4000285E7";
     byte[] byteArray = hexStringToByteArray(hexString);
     System.out.println("Byte Array: " + Arrays.toString(byteArray));
