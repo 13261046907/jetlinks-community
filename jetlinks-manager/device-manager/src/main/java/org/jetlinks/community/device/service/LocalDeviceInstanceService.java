@@ -639,26 +639,6 @@ public class LocalDeviceInstanceService extends GenericReactiveCrudService<Devic
     @SneakyThrows
     public Mono<Map<String, Object>> writeProperties(String deviceId,
                                                      Map<String, Object> properties) {
-        try {
-            final String[] productId = {""};
-            Mono<DeviceDetail> deviceDetailMono = getDeviceDetail(deviceId);
-            if(!Objects.isNull(deviceDetailMono)){
-                deviceDetailMono.subscribe(
-                    detail ->{
-                        productId[0] = detail.getProductId();
-                    }
-                );
-            }
-//            mqttConnect.setMqttClient(MqttConstant.MQTT_USERNAME, MqttConstant.MQTT_PASSWORD, null);
-            JSONObject message = new JSONObject();
-            message.put("deviceId",deviceId);
-            message.put("properties",JSONObject.toJSON(properties));
-            String topic = "/" + productId[0] + "/" + deviceId + "/properties/report";
-            log.info("writeProperties-topic:{},message:{}",topic,message.toString());
-            mqttConnect.pub(topic, message.toString());
-        } catch (MqttException e) {
-            e.printStackTrace();
-        }
         return registry
             .getDevice(deviceId)
             .switchIfEmpty(ErrorUtils.notFound("error.device_not_found_or_not_activated"))
