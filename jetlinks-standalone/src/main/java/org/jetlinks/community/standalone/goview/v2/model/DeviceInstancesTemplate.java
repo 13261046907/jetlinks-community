@@ -23,6 +23,8 @@ public class DeviceInstancesTemplate implements Serializable {
 
     private String deviceId;
 
+    private String topic;
+
     /**
      * 指令
      */
