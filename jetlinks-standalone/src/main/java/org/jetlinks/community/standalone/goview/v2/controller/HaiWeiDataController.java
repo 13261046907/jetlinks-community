@@ -28,7 +28,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/haiWei")
-@Tag(name = "程序管理")
+@Tag(name = "海思管理")
 public class HaiWeiDataController extends BaseController {
 	@Resource
 	private IHaiWeiDataService iHaiWeiDataService;
