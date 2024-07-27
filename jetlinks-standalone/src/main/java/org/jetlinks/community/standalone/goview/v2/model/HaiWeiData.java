@@ -1,4 +1,4 @@
-package org.jetlinks.community.standalone.goview.v2.model.vo;
+package org.jetlinks.community.standalone.goview.v2.model;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;

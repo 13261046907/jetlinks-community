@@ -1,7 +1,7 @@
 package org.jetlinks.community.standalone.goview.v2.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import org.jetlinks.community.standalone.goview.v2.model.vo.HaiWeiData;
+import org.jetlinks.community.standalone.goview.v2.model.HaiWeiData;
 
 /**
  * <p>

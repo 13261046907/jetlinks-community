@@ -1,7 +1,7 @@
 package org.jetlinks.community.standalone.goview.v2.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import org.jetlinks.community.standalone.goview.v2.model.vo.HaiWeiData;
+import org.jetlinks.community.standalone.goview.v2.model.HaiWeiData;
 
 /**
  * <p>

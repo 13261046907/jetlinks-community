@@ -10,7 +10,7 @@ import org.jetlinks.community.standalone.goview.v2.common.base.BaseController;
 import org.jetlinks.community.standalone.goview.v2.common.domain.AjaxResult;
 import org.jetlinks.community.standalone.goview.v2.common.domain.ResultTable;
 import org.jetlinks.community.standalone.goview.v2.common.domain.Tablepar;
-import org.jetlinks.community.standalone.goview.v2.model.vo.HaiWeiData;
+import org.jetlinks.community.standalone.goview.v2.model.HaiWeiData;
 import org.jetlinks.community.standalone.goview.v2.service.IHaiWeiDataService;
 import org.jetlinks.community.standalone.goview.v2.util.ConvertUtil;
 import org.springframework.web.bind.annotation.*;
