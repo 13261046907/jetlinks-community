@@ -47,6 +47,26 @@ public class DeviceMessageController {
     @Autowired
     private MQTTConnect mqttConnect;
     private final InitCallback initCallback = new InitCallback();
+
+    //设备功能调用
+    @GetMapping("invoked/{deviceId}/function")
+    @SneakyThrows
+    @Deprecated
+    public Flux<?> invokedDeviceMessage(@PathVariable String deviceId,@RequestParam String topic,
+                                   @RequestParam String instruction) {
+        try {
+            byte[] payload = hexStringToByteArray(instruction);
+            MqttMessage message = new MqttMessage(payload);
+            log.info("message:{}",JSONObject.toJSON(message));
+            log.info("invokedFunction-topic:{},message:{}",topic,message);
+            mqttConnect.pub(topic, message);
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+        return Flux.never();
+
+    }
+
     //获取设备属性
     @GetMapping("/{deviceId}/property/{property:.+}")
     @SneakyThrows
