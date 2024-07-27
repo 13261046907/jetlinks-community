@@ -2,8 +2,7 @@ package org.jetlinks.community.standalone.goview.v2.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
-import org.jetlinks.community.standalone.goview.v2.model.GoviewProjectData;
-import org.mybatis.spring.annotation.MapperScan;
+import org.jetlinks.community.standalone.goview.v2.model.GoviewProject;
 
 /**
  * <p>
@@ -13,6 +12,6 @@ import org.mybatis.spring.annotation.MapperScan;
  * @author fc
  * @since 2023-04-30
  */
-public interface GoviewProjectDataMapper extends BaseMapper<GoviewProjectData> {
+public interface GoViewProjectMapper extends BaseMapper<GoviewProject> {
 
 }

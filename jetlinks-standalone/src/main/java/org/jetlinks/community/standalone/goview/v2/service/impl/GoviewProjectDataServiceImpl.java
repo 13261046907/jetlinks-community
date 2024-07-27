@@ -2,7 +2,7 @@ package org.jetlinks.community.standalone.goview.v2.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import org.jetlinks.community.standalone.goview.v2.mapper.GoviewProjectDataMapper;
+import org.jetlinks.community.standalone.goview.v2.mapper.GoViewProjectDataMapper;
 import org.jetlinks.community.standalone.goview.v2.model.GoviewProjectData;
 import org.jetlinks.community.standalone.goview.v2.service.IGoviewProjectDataService;
 import org.springframework.stereotype.Service;
@@ -18,9 +18,9 @@ import javax.annotation.Resource;
  * @since 2023-04-30
  */
 @Service("iGoviewProjectDataService")
-public class GoviewProjectDataServiceImpl extends ServiceImpl<GoviewProjectDataMapper, GoviewProjectData> implements IGoviewProjectDataService {
+public class GoviewProjectDataServiceImpl extends ServiceImpl<GoViewProjectDataMapper, GoviewProjectData> implements IGoviewProjectDataService {
 	@Resource
-    GoviewProjectDataMapper dataMapper;
+    GoViewProjectDataMapper dataMapper;
 	@Override
 	public GoviewProjectData getProjectid(String projectId) {
 		LambdaQueryWrapper<GoviewProjectData> lambdaQueryWrapper=new LambdaQueryWrapper<GoviewProjectData>();
