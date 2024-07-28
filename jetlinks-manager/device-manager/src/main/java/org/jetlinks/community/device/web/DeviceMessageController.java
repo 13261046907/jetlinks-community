@@ -63,7 +63,7 @@ public class DeviceMessageController {
         } catch (MqttException e) {
             e.printStackTrace();
         }
-        return Flux.never();
+        return Flux.empty();
 
     }
 
