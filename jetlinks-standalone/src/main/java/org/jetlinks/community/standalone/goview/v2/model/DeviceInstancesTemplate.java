@@ -26,9 +26,44 @@ public class DeviceInstancesTemplate implements Serializable {
     private String topic;
 
     /**
+     * 设备地址
+     */
+    private String deviceAddress;
+
+    /**
+     * 功能吗
+     */
+    private String functionCode;
+
+    /**
+     * 寄存器地址
+     */
+    private String registerAddress;
+
+    /**
+     * 数据长度
+     */
+    private String dataLength;
+
+    /**
      * 指令
      */
     private String instruction;
+
+    /**
+     * 采集公式
+     */
+    private String collectFormula;
+
+    /**
+     * 控制公式
+     */
+    private String controlFormula;
+
+    /**
+     * 采集频率
+     */
+    private String samplingFrequency;
 
     /**
      * 标题
