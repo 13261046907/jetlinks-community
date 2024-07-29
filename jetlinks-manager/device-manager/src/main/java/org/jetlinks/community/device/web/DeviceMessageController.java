@@ -11,6 +11,7 @@ import org.hswebframework.web.authorization.annotation.Resource;
 import org.hswebframework.web.exception.BusinessException;
 import org.hswebframework.web.id.IDGenerator;
 import org.jetlinks.community.device.entity.DevicePropertiesEntity;
+import org.jetlinks.community.device.mqtt.CRC16Utils;
 import org.jetlinks.community.device.mqtt.InitCallback;
 import org.jetlinks.community.device.mqtt.MQTTConnect;
 import org.jetlinks.community.utils.ErrorUtils;
@@ -55,7 +56,9 @@ public class DeviceMessageController {
     public Flux<?> invokedDeviceMessage(@PathVariable String deviceId,@RequestParam String topic,
                                    @RequestParam String instruction) {
         try {
-            byte[] payload = hexStringToByteArray(instruction);
+            String crcResult = CRC16Utils.getCrcResult(instruction);
+            log.info("crcResult:{}",JSONObject.toJSON(crcResult));
+            byte[] payload = hexStringToByteArray(crcResult);
             MqttMessage message = new MqttMessage(payload);
             log.info("message:{}",JSONObject.toJSON(message));
             log.info("invokedFunction-topic:{},message:{}",topic,message);

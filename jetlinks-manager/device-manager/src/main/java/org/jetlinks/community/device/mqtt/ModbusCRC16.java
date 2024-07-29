@@ -36,7 +36,7 @@ public class ModbusCRC16 {
     }
 
     public static void main(String[] args) {
-        String input = "030301f40002";
+        String input = "010504020001";
         String crc16 = calculateCRC16(input);
         System.out.println("CRC16: " + crc16);
     }

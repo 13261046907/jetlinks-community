@@ -85,10 +85,11 @@ public class InitCallback implements MqttCallback {
   private String hexToStr(String hexValue){
       int decValue = Integer.parseInt(hexValue, 16);
       double dividedByTen = (double) decValue / 10.0;
-      DecimalFormat df = new DecimalFormat("#.00");
+      DecimalFormat df = new DecimalFormat("0.00");
       String result = df.format(dividedByTen);
       return result;
   }
+
 
   public static void main(String[] args) {
       String url = "/101010/properties/report";

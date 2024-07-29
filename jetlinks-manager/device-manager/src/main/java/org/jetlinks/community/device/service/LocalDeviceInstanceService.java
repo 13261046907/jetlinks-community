@@ -690,7 +690,6 @@ public class LocalDeviceInstanceService extends GenericReactiveCrudService<Devic
     //获取设备所有属性
     @SneakyThrows
     public Mono<Map<String, Object>> readProperties(String deviceId, List<String> properties) {
-
         return registry.getDevice(deviceId)
                        .switchIfEmpty(ErrorUtils.notFound("error.device_not_found_or_not_activated"))
                        .map(DeviceOperator::messageSender)
