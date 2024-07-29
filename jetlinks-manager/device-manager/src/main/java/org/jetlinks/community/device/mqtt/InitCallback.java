@@ -7,7 +7,9 @@ import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.jetlinks.community.device.service.LocalDeviceInstanceService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.ReactiveRedisOperations;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
 import java.text.DecimalFormat;
 import java.util.Arrays;
@@ -22,6 +24,8 @@ import java.util.Map;
 public class InitCallback implements MqttCallback {
     @Autowired
     private  LocalDeviceInstanceService service;
+    @Autowired
+    private ReactiveRedisOperations<String, String> redis;
 
   /**
    * MQTT 断开连接会执行此方法
@@ -47,9 +51,14 @@ public class InitCallback implements MqttCallback {
   public void messageArrived(String topic, MqttMessage message) {
       String convertedHexString = byteArrayToHexString(message.getPayload());
       log.info("TOPIC: [{}] 消息: {}", topic, convertedHexString);
+      String[] parts = topic.split("/");
+      String deviceId = parts[1];  // 设备id
+      String redisKey = "mqtt:"+deviceId;
+      Mono<String> stringMono = redis.opsForValue().get(redisKey);
+      stringMono.subscribe(value -> {
+          log.info("currentMessage:{}",value);
+      });;
       if("/10/properties/report".equals(topic)){
-          String[] parts = topic.split("/");
-          String deviceId = parts[1];  // 设备id
           if(convertedHexString.length() > 14){
               String humidity = convertedHexString.substring(6, 10);
               String temperature = convertedHexString.substring(10, 14);
