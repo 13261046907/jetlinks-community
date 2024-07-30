@@ -1,20 +1,26 @@
 package org.jetlinks.community.device.mqtt;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.jetlinks.community.device.configuration.RedisUtil;
+import org.jetlinks.community.device.response.DeviceDetail;
 import org.jetlinks.community.device.service.LocalDeviceInstanceService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.ReactiveRedisOperations;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 
 import java.text.DecimalFormat;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.*;
 
 /**
  * MQTT回调函数
@@ -22,12 +28,17 @@ import java.util.Map;
 @Slf4j
 @Component
 public class InitCallback implements MqttCallback {
-    @Autowired
-    private  LocalDeviceInstanceService service;
-    @Autowired
-    private ReactiveRedisOperations<String, String> redis;
+    @Getter
+    private final LocalDeviceInstanceService service;
 
-  /**
+    @Autowired
+    private RedisUtil redisUtil;
+
+    public InitCallback(LocalDeviceInstanceService service) {
+        this.service = service;
+    }
+
+    /**
    * MQTT 断开连接会执行此方法
    */
   @Override
@@ -50,16 +61,40 @@ public class InitCallback implements MqttCallback {
   @Override
   public void messageArrived(String topic, MqttMessage message) {
       String convertedHexString = byteArrayToHexString(message.getPayload());
-      log.info("TOPIC: [{}] 消息: {}", topic, convertedHexString);
+      log.info("TOPIC: [{}] 消息: {}，id:{}", topic, convertedHexString,message.getId());
+      Boolean aBoolean = messageDate(message.getId());
+      if(!aBoolean){
+          return;
+      }
       String[] parts = topic.split("/");
-      String deviceId = parts[1];  // 设备id
-      String redisKey = "mqtt:"+deviceId;
-      Mono<String> stringMono = redis.opsForValue().get(redisKey);
-      stringMono.subscribe(value -> {
-          log.info("currentMessage:{}",value);
-      });;
-      if("/10/properties/report".equals(topic)){
-          if(convertedHexString.length() > 14){
+      String topicId = parts[1];  // 设备id
+      String redisKey = "mqtt:"+topicId;
+      String currentMessage = redisUtil.get(redisKey)+"";
+      if(StringUtils.isNotBlank(currentMessage)){
+          String startFunctionStr = currentMessage.substring(8, 12);
+          //取整获取字符串长度
+          Integer startFunction = Integer.valueOf(startFunctionStr);
+          log.info("currentMessage:{},startFunction:{}",currentMessage,startFunction);
+          String deviceId= currentMessage.substring(0, 2);
+          Mono<DeviceDetail> deviceDetail = service.getDeviceDetail(deviceId);
+          DeviceDetail block = deviceDetail.block();
+          String productMetadata = block.getProductMetadata();
+          List<ProductProperties> propertiesList = new ArrayList<>();
+          if(StringUtils.isNotBlank(productMetadata)){
+              JSONObject productMetadataJson = JSONObject.parseObject(productMetadata);
+              propertiesList = JSONArray.parseArray(productMetadataJson.getString("properties"), ProductProperties.class);
+          }
+          List<String> hexList = getHexList(convertedHexString, startFunction);
+          if(!CollectionUtils.isEmpty(hexList) && !CollectionUtils.isEmpty(propertiesList)){
+              for (int i = 0; i <= propertiesList.size(); i++) { // Adjust t
+                  Map<String, Object> propertiesMap = new HashMap<>();
+                  ProductProperties productProperties = propertiesList.get(i);
+                  log.info("name:{},value:{}",productProperties.getName(),productProperties.getId());
+                  propertiesMap.put(productProperties.getId(),hexList.get(i));
+                  syncSendMessageToDevice(deviceId,JSONObject.toJSONString(propertiesMap));
+              }
+          }
+          /*if(startFunction == 8){
               String humidity = convertedHexString.substring(6, 10);
               String temperature = convertedHexString.substring(10, 14);
               String noise = convertedHexString.substring(14, 18);
@@ -81,14 +116,12 @@ public class InitCallback implements MqttCallback {
               Map<String, Object> co2Properties = new HashMap<>();
               co2Properties.put("co2",co2Str);
               syncSendMessageToDevice(deviceId,JSONObject.toJSONString(co2Properties));
-          }
-      }else {
-
+          }*/
       }
   }
 
   private void syncSendMessageToDevice(String deviceId,String message){
-      HttpUtils.sendPost("http://127.0.0.1:8848/device/instance/"+deviceId+"/property",message);
+      HttpUtils.sendPost("http://127.0.0.1:8848/device-instance/"+deviceId+"/property",message);
   }
 
   private String hexToStr(String hexValue){
@@ -100,7 +133,7 @@ public class InitCallback implements MqttCallback {
   }
 
 
-  public static void main(String[] args) {
+  public static void main1(String[] args) {
       String url = "/101010/properties/report";
       String[] parts = url.split("/");
       String value = parts[1];  // 结果为 "10"
@@ -149,5 +182,38 @@ public class InitCallback implements MqttCallback {
         }
         return hexString.toString();
     }
+
+    public List<String> getHexList(String convertedHexString, int num){
+        int startIndex = 6; // Starting index for the first humidity
+        List<String> hexList = new ArrayList<>();
+        int length = 4; // Length of each humidity substring
+        for (int i = 0; i <= num; i++) { // Adjust the loop count based on how many substrings you want
+            String hex= convertedHexString.substring(startIndex + (i * length), startIndex + ((i + 1) * length));
+            String hexStr = hexToStr(hex);
+            hexList.add(hexStr);
+        }
+        return  hexList;
+    }
+
+    public Boolean messageDate(long timestamp) {
+        // 转换为 Instant
+        Instant instant = Instant.ofEpochSecond(timestamp);
+        // 将 Instant 转换为本地日期（根据系统时区）
+        LocalDate date = instant.atZone(ZoneId.systemDefault()).toLocalDate();
+
+        // 输出转换后的日期
+        System.out.println("转换后的日期: " + date);
+
+        // 获取今天的日期
+        LocalDate today = LocalDate.now();
+
+        // 判断是否为今天
+        if (date.isEqual(today)) {
+            return true;
+        } else {
+           return false;
+        }
+    }
+
 }
 

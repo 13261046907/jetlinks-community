@@ -31,7 +31,7 @@ public class DeviceInstancesTemplate implements Serializable {
     private String deviceAddress;
 
     /**
-     * 功能吗
+     * 功能码
      */
     private String functionCode;
 

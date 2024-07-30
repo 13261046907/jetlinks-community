@@ -31,6 +31,9 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -47,8 +50,8 @@ public class DeviceMessageController {
     private DeviceRegistry registry;
     @Autowired
     private MQTTConnect mqttConnect;
-    @javax.annotation.Resource
-    private RedisUtil redissonUtil;
+    @Autowired
+    private RedisUtil redisUtil;
     //设备功能调用
     @GetMapping("invoked/{deviceId}/function")
     @SneakyThrows
@@ -61,17 +64,15 @@ public class DeviceMessageController {
             byte[] payload = hexStringToByteArray(crcResult);
             String redisKey = "mqtt:"+deviceId;
             MqttMessage message = new MqttMessage(payload);
-            redissonUtil.set(redisKey,instruction);
-            Object currentMsg = redissonUtil.get(redisKey);
-            log.info("message:{}",JSONObject.toJSON(currentMsg));
+            message.setId((int) (System.currentTimeMillis() / 1000));
+            redisUtil.set(redisKey,instruction);
             log.info("invokedFunction-topic:{},message:{}",topic,message);
             mqttConnect.pub(topic, message);
         } catch (MqttException e) {
             e.printStackTrace();
         }
         return Flux.empty();
-
-}
+    }
 
     //获取设备属性
     @GetMapping("/{deviceId}/property/{property:.+}")
