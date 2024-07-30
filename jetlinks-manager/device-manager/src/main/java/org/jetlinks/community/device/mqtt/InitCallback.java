@@ -31,11 +31,12 @@ public class InitCallback implements MqttCallback {
     @Getter
     private final LocalDeviceInstanceService service;
 
-    @Autowired
-    private RedisUtil redisUtil;
+    @Getter
+    private final RedisUtil redisUtil;
 
-    public InitCallback(LocalDeviceInstanceService service) {
+    public InitCallback(LocalDeviceInstanceService service,RedisUtil redisUtil) {
         this.service = service;
+        this.redisUtil = redisUtil;
     }
 
     /**
@@ -66,6 +67,7 @@ public class InitCallback implements MqttCallback {
       String topicId = parts[1];  // 设备id
       String redisKey = "mqtt:"+topicId;
       String currentMessage = redisUtil.get(redisKey)+"";
+      log.info("currentMessage:{}",currentMessage);
       if(StringUtils.isNotBlank(currentMessage)){
           String startFunctionStr = currentMessage.substring(8, 12);
           //取整获取字符串长度
@@ -74,6 +76,7 @@ public class InitCallback implements MqttCallback {
           String deviceId= currentMessage.substring(0, 2);
           Mono<DeviceDetail> deviceDetail = service.getDeviceDetail(deviceId);
           DeviceDetail block = deviceDetail.block();
+          log.info("DeviceDetail:{}",JSONObject.toJSONString(block));
           String productMetadata = block.getProductMetadata();
           List<ProductProperties> propertiesList = new ArrayList<>();
           if(StringUtils.isNotBlank(productMetadata)){
@@ -81,6 +84,7 @@ public class InitCallback implements MqttCallback {
               propertiesList = JSONArray.parseArray(productMetadataJson.getString("properties"), ProductProperties.class);
           }
           List<String> hexList = getHexList(convertedHexString, startFunction);
+          log.info("hexList:{}",JSONObject.toJSONString(hexList));
           if(!CollectionUtils.isEmpty(hexList) && !CollectionUtils.isEmpty(propertiesList)){
               for (int i = 0; i <= propertiesList.size(); i++) { // Adjust t
                   Map<String, Object> propertiesMap = new HashMap<>();
