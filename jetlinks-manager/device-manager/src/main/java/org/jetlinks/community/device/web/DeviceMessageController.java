@@ -66,7 +66,8 @@ public class DeviceMessageController {
             MqttMessage message = new MqttMessage(payload);
             message.setId((int) (System.currentTimeMillis() / 1000));
             redisUtil.set(redisKey,instruction);
-            log.info("invokedFunction-topic:{},message:{}",topic,message);
+            String currentMessage = redisUtil.get(redisKey)+"";
+            log.info("invokedFunction-topic:{},message:{}",topic,currentMessage);
             mqttConnect.pub(topic, message);
         } catch (MqttException e) {
             e.printStackTrace();

@@ -62,10 +62,6 @@ public class InitCallback implements MqttCallback {
   public void messageArrived(String topic, MqttMessage message) {
       String convertedHexString = byteArrayToHexString(message.getPayload());
       log.info("TOPIC: [{}] 消息: {}，id:{}", topic, convertedHexString,message.getId());
-      Boolean aBoolean = messageDate(message.getId());
-      if(!aBoolean){
-          return;
-      }
       String[] parts = topic.split("/");
       String topicId = parts[1];  // 设备id
       String redisKey = "mqtt:"+topicId;
@@ -121,7 +117,7 @@ public class InitCallback implements MqttCallback {
   }
 
   private void syncSendMessageToDevice(String deviceId,String message){
-      HttpUtils.sendPost("http://127.0.0.1:8848/device-instance/"+deviceId+"/property",message);
+      HttpUtils.sendPost("http://127.0.0.1:8848/device/instance/"+deviceId+"/property",message);
   }
 
   private String hexToStr(String hexValue){
