@@ -89,9 +89,6 @@ public class LocalDeviceInstanceService extends GenericReactiveCrudService<Devic
 
     private final TransactionalOperator transactionalOperator;
 
-    @Autowired
-    private MQTTConnect mqttConnect;
-
     public LocalDeviceInstanceService(DeviceRegistry registry,
                                       LocalDeviceProductService deviceProductService,
                                       @SuppressWarnings("all")

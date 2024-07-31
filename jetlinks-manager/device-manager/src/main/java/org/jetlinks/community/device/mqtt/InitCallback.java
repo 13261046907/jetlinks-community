@@ -2,16 +2,15 @@ package org.jetlinks.community.device.mqtt;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.jetlinks.community.device.configuration.RedisUtil;
 import org.jetlinks.community.device.response.DeviceDetail;
 import org.jetlinks.community.device.service.LocalDeviceInstanceService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
@@ -28,13 +27,10 @@ import java.util.*;
 @Slf4j
 @Component
 public class InitCallback implements MqttCallback {
-    @Getter
     private final LocalDeviceInstanceService service;
-
-    @Getter
     private final RedisUtil redisUtil;
 
-    public InitCallback(LocalDeviceInstanceService service,RedisUtil redisUtil) {
+    public InitCallback(LocalDeviceInstanceService service, RedisUtil redisUtil) {
         this.service = service;
         this.redisUtil = redisUtil;
     }
@@ -44,7 +40,6 @@ public class InitCallback implements MqttCallback {
    */
   @Override
   public void connectionLost(Throwable cause) {
-
   }
 
   /**
@@ -63,17 +58,15 @@ public class InitCallback implements MqttCallback {
   public void messageArrived(String topic, MqttMessage message) {
       String convertedHexString = byteArrayToHexString(message.getPayload());
       log.info("TOPIC: [{}] 消息: {}，id:{}", topic, convertedHexString,message.getId());
-      String[] parts = topic.split("/");
-      String topicId = parts[1];  // 设备id
-      String redisKey = "mqtt:"+topicId;
-      String currentMessage = redisUtil.get(redisKey)+"";
-      log.info("currentMessage:{}",currentMessage);
-      if(StringUtils.isNotBlank(currentMessage)){
-          String startFunctionStr = currentMessage.substring(8, 12);
+      String redisKey = "mqtt:"+convertedHexString.substring(0,2);
+      String redisKeyValue = redisUtil.get(redisKey)+"";
+      log.info("redisKey:{},currentMessage:{}",redisKey,redisKeyValue);
+      if(StringUtils.isNotBlank(redisKeyValue)){
+          String startFunctionStr = redisKeyValue.substring(8, 12);
           //取整获取字符串长度
           Integer startFunction = Integer.valueOf(startFunctionStr);
-          log.info("currentMessage:{},startFunction:{}",currentMessage,startFunction);
-          String deviceId= currentMessage.substring(0, 2);
+          log.info("currentMessage:{},startFunction:{}",redisKeyValue,startFunction);
+          String deviceId= redisKeyValue.substring(0, 2);
           Mono<DeviceDetail> deviceDetail = service.getDeviceDetail(deviceId);
           DeviceDetail block = deviceDetail.block();
           log.info("DeviceDetail:{}",JSONObject.toJSONString(block));
@@ -89,8 +82,8 @@ public class InitCallback implements MqttCallback {
               for (int i = 0; i <= propertiesList.size(); i++) { // Adjust t
                   Map<String, Object> propertiesMap = new HashMap<>();
                   ProductProperties productProperties = propertiesList.get(i);
-                  log.info("name:{},value:{}",productProperties.getName(),productProperties.getId());
                   propertiesMap.put(productProperties.getId(),hexList.get(i));
+                  log.info("deviceId:{},value:{}",JSONObject.toJSONString(propertiesMap));
                   syncSendMessageToDevice(deviceId,JSONObject.toJSONString(propertiesMap));
               }
           }

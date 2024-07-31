@@ -16,7 +16,6 @@ public class MQTTListener implements ApplicationRunner {
     private final MQTTConnect server;
     private final InitCallback initCallback;
 
-  @Autowired
   public MQTTListener(MQTTConnect server, InitCallback initCallback) {
     this.server = server;
     this.initCallback = initCallback;

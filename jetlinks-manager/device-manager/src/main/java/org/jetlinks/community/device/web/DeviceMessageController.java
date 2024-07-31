@@ -13,7 +13,9 @@ import org.hswebframework.web.id.IDGenerator;
 import org.jetlinks.community.device.configuration.RedisUtil;
 import org.jetlinks.community.device.entity.DevicePropertiesEntity;
 import org.jetlinks.community.device.mqtt.CRC16Utils;
+import org.jetlinks.community.device.mqtt.InitCallback;
 import org.jetlinks.community.device.mqtt.MQTTConnect;
+import org.jetlinks.community.device.mqtt.MqttConstant;
 import org.jetlinks.community.utils.ErrorUtils;
 import org.jetlinks.core.device.DeviceOperator;
 import org.jetlinks.core.device.DeviceRegistry;
@@ -31,9 +33,6 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -48,10 +47,15 @@ public class DeviceMessageController {
 
     @Autowired
     private DeviceRegistry registry;
-    @Autowired
-    private MQTTConnect mqttConnect;
+
+    private final MQTTConnect mqttConnect;
     @Autowired
     private RedisUtil redisUtil;
+
+    public DeviceMessageController(MQTTConnect mqttConnect, InitCallback initCallback) {
+        this.mqttConnect = mqttConnect;
+    }
+
     //设备功能调用
     @GetMapping("invoked/{deviceId}/function")
     @SneakyThrows
@@ -70,6 +74,7 @@ public class DeviceMessageController {
             log.info("invokedFunction-topic:{},message:{}",topic,currentMessage);
             mqttConnect.pub(topic, message);
         } catch (MqttException e) {
+            log.error(e.getMessage(), e);
             e.printStackTrace();
         }
         return Flux.empty();

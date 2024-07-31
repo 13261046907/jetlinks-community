@@ -6,6 +6,7 @@ import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.nio.charset.Charset;
 
 /**
@@ -16,10 +17,10 @@ import java.nio.charset.Charset;
 @Data
 public class MQTTConnect {
 
-  private String HOST = "tcp://mqtt.tsjhjs.cn:11883";
-  private  String clientId = "jhy202407062011zhihuinew1";
-  private  String topic = "";
-  private MqttClient mqttClient;
+    private String HOST = "tcp://59.110.163.39:11883";
+    private  String clientId = "jhyzhihuinongye20240731";
+    private  String topic = "";
+    private MqttClient mqttClient;
 
     /**
    * 客户端connect连接mqtt服务器
@@ -50,7 +51,7 @@ public class MQTTConnect {
     options.setPassword(passWord.toCharArray());
     options.setConnectionTimeout(30);///默认：30
     options.setAutomaticReconnect(true);//默认：false
-    options.setCleanSession(false);//默认：true
+    options.setCleanSession(true);//默认：true
     options.setKeepAliveInterval(60);//默认：60
     return options;
   }
@@ -81,9 +82,10 @@ public class MQTTConnect {
     token.waitForCompletion();
   }
   public void pub(String topic,MqttMessage mqttMessage) throws MqttException {
-        MqttTopic mqttTopic = mqttClient.getTopic(topic);
-        MqttDeliveryToken token = mqttTopic.publish(mqttMessage);
-        token.waitForCompletion();
+    MqttTopic mqttTopic = mqttClient.getTopic(topic);
+    mqttMessage.setQos(0);
+    MqttDeliveryToken token = mqttTopic.publish(mqttMessage);
+    token.waitForCompletion();
     }
   public void pub(String topic, String msg, int qos) throws MqttException {
     MqttMessage mqttMessage = new MqttMessage();
