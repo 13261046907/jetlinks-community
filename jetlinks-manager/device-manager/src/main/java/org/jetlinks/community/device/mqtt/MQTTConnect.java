@@ -6,7 +6,6 @@ import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.nio.charset.Charset;
 
 /**
@@ -17,8 +16,8 @@ import java.nio.charset.Charset;
 @Data
 public class MQTTConnect {
 
-    private String HOST = "tcp://59.110.163.39:11883";
-    private  String clientId = "jhyzhihuinongye20240731";
+    private String HOST = "tcp://mqtt.tsjhjs.cn:11883";
+    private  String clientId = "jhyzhihuinongye202407311111";
     private  String topic = "";
     private MqttClient mqttClient;
 
@@ -83,7 +82,6 @@ public class MQTTConnect {
   }
   public void pub(String topic,MqttMessage mqttMessage) throws MqttException {
     MqttTopic mqttTopic = mqttClient.getTopic(topic);
-    mqttMessage.setQos(0);
     MqttDeliveryToken token = mqttTopic.publish(mqttMessage);
     token.waitForCompletion();
     }
