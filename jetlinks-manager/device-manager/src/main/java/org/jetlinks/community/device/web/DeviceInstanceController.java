@@ -823,9 +823,10 @@ public class DeviceInstanceController implements ReactiveServiceCrudController<D
     @SneakyThrows
     @QueryAction
     @Operation(summary = "发送设置属性指令到设备", description = "请求示例: {\"属性ID\":\"值\"}")
-    public Flux<?> writeProperties(@PathVariable @Parameter(description = "设备ID") String deviceId,
+    public Flux<?> writeProperties(@PathVariable @Parameter(description = "产品ID") String productId,
+                                   @PathVariable @Parameter(description = "设备ID") String deviceId,
                                    @RequestBody Mono<Map<String, Object>> properties) {
-        return properties.flatMapMany(props -> service.writeProperties(deviceId, props));
+        return properties.flatMapMany(props -> service.writeProperties(productId,deviceId, props));
     }
 
     //设备功能调用

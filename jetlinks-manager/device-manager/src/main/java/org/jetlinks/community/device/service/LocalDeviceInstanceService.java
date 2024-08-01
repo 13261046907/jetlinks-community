@@ -52,7 +52,6 @@ import org.jetlinks.core.utils.CyclicDependencyChecker;
 import org.jetlinks.reactor.ql.utils.CastUtils;
 import org.jetlinks.supports.official.JetLinksDeviceMetadataCodec;
 import org.reactivestreams.Publisher;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
@@ -89,14 +88,16 @@ public class LocalDeviceInstanceService extends GenericReactiveCrudService<Devic
 
     private final TransactionalOperator transactionalOperator;
 
+    private final MQTTConnect mqttConnect;
+
     public LocalDeviceInstanceService(DeviceRegistry registry,
                                       LocalDeviceProductService deviceProductService,
-                                      @SuppressWarnings("all")
                                       ReactiveRepository<DeviceTagEntity, String> tagRepository,
                                       ApplicationEventPublisher eventPublisher,
                                       DeviceConfigMetadataManager metadataManager,
                                       RelationService relationService,
-                                      TransactionalOperator transactionalOperator) {
+                                      TransactionalOperator transactionalOperator,
+                                      MQTTConnect mqttConnect) {
         this.registry = registry;
         this.deviceProductService = deviceProductService;
         this.tagRepository = tagRepository;
@@ -104,6 +105,7 @@ public class LocalDeviceInstanceService extends GenericReactiveCrudService<Devic
         this.metadataManager = metadataManager;
         this.relationService = relationService;
         this.transactionalOperator = transactionalOperator;
+        this.mqttConnect = mqttConnect;
     }
 
     @Override
@@ -634,24 +636,20 @@ public class LocalDeviceInstanceService extends GenericReactiveCrudService<Devic
 
     //设置设备属性
     @SneakyThrows
-    public Mono<Map<String, Object>> writeProperties(String deviceId,
+    public Mono<Map<String, Object>> writeProperties(String productId,String deviceId,
                                                      Map<String, Object> properties) {
-        return registry
-            .getDevice(deviceId)
-            .switchIfEmpty(ErrorUtils.notFound("error.device_not_found_or_not_activated"))
-            .flatMap(operator -> operator
-                .messageSender()
-                .writeProperty()
-                .messageId(IDGenerator.SNOW_FLAKE_STRING.generate())
-                .write(properties)
-                .validate()
-            )
-            .flatMapMany(WritePropertyMessageSender::send)
-            .flatMap(mapReply(WritePropertyMessageReply::getProperties))
-            .reduceWith(LinkedHashMap::new, (main, map) -> {
-                main.putAll(map);
-                return main;
-            });
+        log.info("deviceId:{},properties",deviceId,properties);
+        try {
+            JSONObject message = new JSONObject();
+            message.put("deviceId",deviceId);
+            message.put("properties",JSONObject.toJSON(properties));
+            String topic = "/" + productId + "/" + deviceId + "/properties/report";
+            log.info("writeProperties-topic:{},message:{}",topic,message.toString());
+            mqttConnect.pub(topic, message.toString());
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+        return Mono.empty();
     }
 
     //设备功能调用

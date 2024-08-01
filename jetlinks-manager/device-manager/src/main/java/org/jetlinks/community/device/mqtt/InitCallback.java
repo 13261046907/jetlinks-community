@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
-import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.jetlinks.community.device.configuration.RedisUtil;
 import org.jetlinks.community.device.response.DeviceDetail;
@@ -56,35 +55,38 @@ public class InitCallback implements MqttCallback {
    */
   @Override
   public void messageArrived(String topic, MqttMessage message) {
-      String convertedHexString = byteArrayToHexString(message.getPayload());
-      log.info("TOPIC: [{}] 消息: {}，id:{}", topic, convertedHexString,message.getId());
-      String redisKey = "mqtt:"+convertedHexString.substring(0,2);
-      String redisKeyValue = redisUtil.get(redisKey)+"";
-      log.info("redisKey:{},currentMessage:{}",redisKey,redisKeyValue);
-      if(StringUtils.isNotBlank(redisKeyValue)){
-          String startFunctionStr = redisKeyValue.substring(8, 12);
-          //取整获取字符串长度
-          Integer startFunction = Integer.valueOf(startFunctionStr);
-          log.info("currentMessage:{},startFunction:{}",redisKeyValue,startFunction);
-          String deviceId= redisKeyValue.substring(0, 2);
-          Mono<DeviceDetail> deviceDetail = service.getDeviceDetail(deviceId);
-          DeviceDetail block = deviceDetail.block();
-          log.info("DeviceDetail:{}",JSONObject.toJSONString(block));
-          String productMetadata = block.getProductMetadata();
-          List<ProductProperties> propertiesList = new ArrayList<>();
-          if(StringUtils.isNotBlank(productMetadata)){
-              JSONObject productMetadataJson = JSONObject.parseObject(productMetadata);
-              propertiesList = JSONArray.parseArray(productMetadataJson.getString("properties"), ProductProperties.class);
-          }
-          List<String> hexList = getHexList(convertedHexString, startFunction);
-          log.info("hexList:{}",JSONObject.toJSONString(hexList));
-          if(!CollectionUtils.isEmpty(hexList) && !CollectionUtils.isEmpty(propertiesList)){
-              for (int i = 0; i <= propertiesList.size(); i++) { // Adjust t
-                  Map<String, Object> propertiesMap = new HashMap<>();
-                  ProductProperties productProperties = propertiesList.get(i);
-                  propertiesMap.put(productProperties.getId(),hexList.get(i));
-                  log.info("deviceId:{},value:{}",JSONObject.toJSONString(propertiesMap));
-                  syncSendMessageToDevice(deviceId,JSONObject.toJSONString(propertiesMap));
+      try {
+          String convertedHexString = byteArrayToHexString(message.getPayload());
+          log.info("TOPIC: [{}] 消息: {}，id:{}", topic, convertedHexString,message.getId());
+          String redisKey = "mqtt:"+convertedHexString.substring(0,2);
+          String redisKeyValue = redisUtil.get(redisKey)+"";
+          log.info("redisKey:{},currentMessage:{}",redisKey,redisKeyValue);
+          if(StringUtils.isNotBlank(redisKeyValue)){
+              String startFunctionStr = redisKeyValue.substring(8, 12);
+              //取整获取字符串长度
+              Integer startFunction = Integer.valueOf(startFunctionStr);
+              log.info("currentMessage:{},startFunction:{}",redisKeyValue,startFunction);
+              String deviceId= redisKeyValue.substring(0, 2);
+              Mono<DeviceDetail> deviceDetail = service.getDeviceDetail(deviceId);
+              DeviceDetail block = deviceDetail.block();
+              log.info("DeviceDetail:{}",JSONObject.toJSONString(block));
+              String productMetadata = block.getProductMetadata();
+              String productId = block.getProductId();
+              List<ProductProperties> propertiesList = new ArrayList<>();
+              if(StringUtils.isNotBlank(productMetadata)){
+                  JSONObject productMetadataJson = JSONObject.parseObject(productMetadata);
+                  propertiesList = JSONArray.parseArray(productMetadataJson.getString("properties"), ProductProperties.class);
+              }
+              List<String> hexList = getHexList(convertedHexString, startFunction);
+              log.info("hexList:{}",JSONObject.toJSONString(hexList));
+              if(!CollectionUtils.isEmpty(hexList) && !CollectionUtils.isEmpty(propertiesList)){
+                  for (int i = 0; i <= propertiesList.size(); i++) { // Adjust t
+                      Map<String, Object> propertiesMap = new HashMap<>();
+                      ProductProperties productProperties = propertiesList.get(i);
+                      propertiesMap.put(productProperties.getId(),hexList.get(i));
+                      log.info("deviceId:{},param:{}",deviceId,JSONObject.toJSONString(propertiesMap));
+                      syncSendMessageToDevice(productId,deviceId,propertiesMap);
+                  }
               }
           }
           /*if(startFunction == 8){
@@ -110,11 +112,14 @@ public class InitCallback implements MqttCallback {
               co2Properties.put("co2",co2Str);
               syncSendMessageToDevice(deviceId,JSONObject.toJSONString(co2Properties));
           }*/
+      }catch (Exception e){
+          log.error(e.getMessage());
       }
   }
 
-  private void syncSendMessageToDevice(String deviceId,String message){
-      HttpUtils.sendPost("http://127.0.0.1:8848/device/instance/"+deviceId+"/property",message);
+  private void syncSendMessageToDevice(String productId,String deviceId,Map<String, Object> props){
+      service.writeProperties(productId,deviceId, props);
+//      HttpUtils.sendPost("http://127.0.0.1:8848/device/instance/"+deviceId+"/property",message);
   }
 
   private String hexToStr(String hexValue){
