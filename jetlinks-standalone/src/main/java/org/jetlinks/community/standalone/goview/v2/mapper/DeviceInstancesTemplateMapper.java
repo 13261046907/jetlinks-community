@@ -1,6 +1,7 @@
 package org.jetlinks.community.standalone.goview.v2.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Param;
 import org.jetlinks.community.standalone.goview.v2.model.DeviceInstancesTemplate;
 
 /**
@@ -13,4 +14,5 @@ import org.jetlinks.community.standalone.goview.v2.model.DeviceInstancesTemplate
  */
 public interface DeviceInstancesTemplateMapper extends BaseMapper<DeviceInstancesTemplate> {
 
+    void updateStateByDeviceId(@Param("deviceId") String deviceId, @Param("state") String state);
 }

@@ -16,4 +16,5 @@ import java.awt.*;
  */
 public interface DeviceInstancesTemplateService extends IService<DeviceInstancesTemplate> {
 
+    void updateStateByDeviceId(String deviceId,String state);
 }

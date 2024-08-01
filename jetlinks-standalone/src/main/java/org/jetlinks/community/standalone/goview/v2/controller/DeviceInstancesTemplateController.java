@@ -8,6 +8,7 @@ import org.jetlinks.community.standalone.goview.v2.common.base.BaseController;
 import org.jetlinks.community.standalone.goview.v2.common.domain.AjaxResult;
 import org.jetlinks.community.standalone.goview.v2.common.domain.ResultTable;
 import org.jetlinks.community.standalone.goview.v2.model.DeviceInstancesTemplate;
+import org.jetlinks.community.standalone.goview.v2.model.vo.DeviceVo;
 import org.jetlinks.community.standalone.goview.v2.service.DeviceInstancesTemplateService;
 import org.springframework.web.bind.annotation.*;
 
@@ -64,5 +65,13 @@ public class DeviceInstancesTemplateController extends BaseController {
             return success();
         }
         return error();
+    }
+
+    @PostMapping("/updateStateByDeviceId")
+    @ResponseBody
+    public AjaxResult updateStateByDeviceId(@RequestBody DeviceVo deviceVo)
+    {
+        deviceInstancesTemplateService.updateStateByDeviceId(deviceVo.getDeviceId(),deviceVo.getState());
+        return success();
     }
 }
