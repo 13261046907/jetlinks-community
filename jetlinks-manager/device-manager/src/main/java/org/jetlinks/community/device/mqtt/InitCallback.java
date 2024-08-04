@@ -70,12 +70,12 @@ public class InitCallback implements MqttCallback {
               Mono<DeviceDetail> deviceDetail = service.getDeviceDetail(deviceId);
               DeviceDetail block = deviceDetail.block();
               log.info("DeviceDetail:{}",JSONObject.toJSONString(block));
-              String productMetadata = block.getProductMetadata();
+              String metadata = block.getMetadata();
               String productId = block.getProductId();
               List<ProductProperties> propertiesList = new ArrayList<>();
-              if(StringUtils.isNotBlank(productMetadata)){
-                  JSONObject productMetadataJson = JSONObject.parseObject(productMetadata);
-                  propertiesList = JSONArray.parseArray(productMetadataJson.getString("properties"), ProductProperties.class);
+              if(StringUtils.isNotBlank(metadata)){
+                  JSONObject metadataJson = JSONObject.parseObject(metadata);
+                  propertiesList = JSONArray.parseArray(metadataJson.getString("properties"), ProductProperties.class);
               }
               List<String> hexList = getHexList(convertedHexString, startFunction);
               log.info("hexList:{}",JSONObject.toJSONString(hexList));
@@ -153,7 +153,7 @@ public class InitCallback implements MqttCallback {
 
     StringBuilder payloadBuilder = new StringBuilder();
     for (byte b : message.getPayload()) {
-        payloadBuilder.append(String.format("%02X", b));
+            payloadBuilder.append(String.format("%02X", b));
     }
     json.put("payload", payloadBuilder.toString());
     json.put("duplicate", message.isDuplicate());
