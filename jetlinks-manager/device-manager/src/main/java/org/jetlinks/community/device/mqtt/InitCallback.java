@@ -8,7 +8,9 @@ import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.jetlinks.community.device.configuration.RedisUtil;
+import org.jetlinks.community.device.entity.DeviceInstanceTemplateEntity;
 import org.jetlinks.community.device.response.DeviceDetail;
+import org.jetlinks.community.device.service.DeviceInstanceTemplateService;
 import org.jetlinks.community.device.service.LocalDeviceInstanceService;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -27,10 +29,12 @@ import java.util.*;
 @Component
 public class InitCallback implements MqttCallback {
     private final LocalDeviceInstanceService service;
+    private final DeviceInstanceTemplateService deviceInstanceTemplateService;
     private final RedisUtil redisUtil;
 
-    public InitCallback(LocalDeviceInstanceService service, RedisUtil redisUtil) {
+    public InitCallback(LocalDeviceInstanceService service, DeviceInstanceTemplateService deviceInstanceTemplateService, RedisUtil redisUtil) {
         this.service = service;
+        this.deviceInstanceTemplateService = deviceInstanceTemplateService;
         this.redisUtil = redisUtil;
     }
 
@@ -61,57 +65,59 @@ public class InitCallback implements MqttCallback {
           String redisKey = "mqtt:"+convertedHexString.substring(0,2);
           String redisKeyValue = redisUtil.get(redisKey)+"";
           log.info("redisKey:{},currentMessage:{}",redisKey,redisKeyValue);
-          if(StringUtils.isNotBlank(redisKeyValue)){
+          if(StringUtils.isNotBlank(redisKeyValue)&& redisKeyValue.length() >=12){
               String startFunctionStr = redisKeyValue.substring(8, 12);
               //取整获取字符串长度
               Integer startFunction = Integer.valueOf(startFunctionStr);
               log.info("currentMessage:{},startFunction:{}",redisKeyValue,startFunction);
               String deviceId= redisKeyValue.substring(0, 2);
-              Mono<DeviceDetail> deviceDetail = service.getDeviceDetail(deviceId);
-              DeviceDetail block = deviceDetail.block();
-              log.info("DeviceDetail:{}",JSONObject.toJSONString(block));
-              String metadata = block.getMetadata();
-              String productId = block.getProductId();
-              List<ProductProperties> propertiesList = new ArrayList<>();
-              if(StringUtils.isNotBlank(metadata)){
-                  JSONObject metadataJson = JSONObject.parseObject(metadata);
-                  propertiesList = JSONArray.parseArray(metadataJson.getString("properties"), ProductProperties.class);
-              }
-              List<String> hexList = getHexList(convertedHexString, startFunction);
-              log.info("hexList:{}",JSONObject.toJSONString(hexList));
-              if(!CollectionUtils.isEmpty(hexList) && !CollectionUtils.isEmpty(propertiesList)){
-                  for (int i = 0; i <= propertiesList.size(); i++) { // Adjust t
-                      Map<String, Object> propertiesMap = new HashMap<>();
-                      ProductProperties productProperties = propertiesList.get(i);
-                      propertiesMap.put(productProperties.getId(),hexList.get(i));
-                      log.info("deviceId:{},param:{}",deviceId,JSONObject.toJSONString(propertiesMap));
-                      syncSendMessageToDevice(productId,deviceId,propertiesMap);
+              Mono<DeviceInstanceTemplateEntity> deviceInstanceTemplate = deviceInstanceTemplateService.findByDeviceId(deviceId);
+              DeviceInstanceTemplateEntity deviceInstanceTemplateEntity = deviceInstanceTemplate.block();
+              if(!Objects.isNull(deviceInstanceTemplateEntity)){
+                  Integer deviceType = deviceInstanceTemplateEntity.getDevice_type();
+                  if(!Objects.isNull(deviceType)){
+                      if(1 == deviceType){
+                          //属性设备
+                          Mono<DeviceDetail> deviceDetail = service.getDeviceDetail(deviceId);
+                          DeviceDetail detail = deviceDetail.block();
+                          if(!Objects.isNull(detail)){
+                              log.info("DeviceDetail:{}",JSONObject.toJSONString(detail));
+                              String metadata = detail.getMetadata();
+                              String productId = detail.getProductId();
+                              List<ProductProperties> propertiesList = new ArrayList<>();
+                              if(StringUtils.isNotBlank(metadata)){
+                                  JSONObject metadataJson = JSONObject.parseObject(metadata);
+                                  propertiesList = JSONArray.parseArray(metadataJson.getString("properties"), ProductProperties.class);
+                              }
+                              List<String> hexList = getHexList(convertedHexString, startFunction);
+                              log.info("hexList:{}",JSONObject.toJSONString(hexList));
+                              if(!CollectionUtils.isEmpty(hexList) && !CollectionUtils.isEmpty(propertiesList)){
+                                  for (int i = 0; i <= propertiesList.size(); i++) { // Adjust t
+                                      Map<String, Object> propertiesMap = new HashMap<>();
+                                      ProductProperties productProperties = propertiesList.get(i);
+                                      propertiesMap.put(productProperties.getId(),hexList.get(i));
+                                      log.info("deviceId:{},param:{}",deviceId,JSONObject.toJSONString(propertiesMap));
+                                      syncSendMessageToDevice(productId,deviceId,propertiesMap);
+                                  }
+                              }
+                          }
+                      }else {
+                          //开关设备,验证发送的指令和收到的消息是否一致并修改开关状态
+                          String openInstruction = deviceInstanceTemplateEntity.getOpen_instruction();
+                          String closeInstruction = deviceInstanceTemplateEntity.getClose_instruction();
+                          if(convertedHexString.equals(openInstruction)){
+                              //开
+                              deviceInstanceTemplateService.updateStatusById("开",deviceId);
+                          }else if(convertedHexString.equals(closeInstruction)){
+                              //关
+                              deviceInstanceTemplateService.updateStatusById("关",deviceId);
+                          }else {
+                              log.error("开关指令收发不一致,deviceId:{},收指令:{},发指令:{},关指令:{}",deviceId,convertedHexString,openInstruction,closeInstruction);
+                          }
+                      }
                   }
               }
           }
-          /*if(startFunction == 8){
-              String humidity = convertedHexString.substring(6, 10);
-              String temperature = convertedHexString.substring(10, 14);
-              String noise = convertedHexString.substring(14, 18);
-              String co2= convertedHexString.substring(18, 22);
-              String temperatureStr = hexToStr(temperature);
-              String humidityStr = hexToStr(humidity);
-              String noiseStr = hexToStr(noise);
-              String co2Str = hexToStr(co2);
-              log.info("湿度:{},温度:{},噪声值:{},二氧化碳值:{}",humidityStr,temperatureStr,noiseStr,co2Str);
-              Map<String, Object> temperatureProperties = new HashMap<>();
-              temperatureProperties.put("temperature",temperatureStr);
-              syncSendMessageToDevice(deviceId,JSONObject.toJSONString(temperatureProperties));
-              Map<String, Object> humidityProperties = new HashMap<>();
-              humidityProperties.put("humidity",humidityStr);
-              syncSendMessageToDevice(deviceId,JSONObject.toJSONString(humidityProperties));
-              Map<String, Object> noiseProperties = new HashMap<>();
-              noiseProperties.put("noise",noiseStr);
-              syncSendMessageToDevice(deviceId,JSONObject.toJSONString(noiseProperties));
-              Map<String, Object> co2Properties = new HashMap<>();
-              co2Properties.put("co2",co2Str);
-              syncSendMessageToDevice(deviceId,JSONObject.toJSONString(co2Properties));
-          }*/
       }catch (Exception e){
           log.error(e.getMessage());
       }
