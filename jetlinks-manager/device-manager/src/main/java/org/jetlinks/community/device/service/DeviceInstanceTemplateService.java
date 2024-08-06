@@ -21,14 +21,13 @@ public class DeviceInstanceTemplateService extends GenericReactiveCrudService<De
 
     public Mono<DeviceInstanceTemplateEntity> findByDeviceId(String deviceId) {
         return createQuery()
-            .where(DeviceInstanceTemplateEntity::getDevice_id, deviceId)
-            .fetchOne();
+            .where(DeviceInstanceTemplateEntity::getDeviceId, deviceId).fetchOne();
     }
 
     public Mono<Integer> updateStatusById(String status,String deviceId) {
         return createUpdate()
             .set(DeviceInstanceTemplateEntity::getStatus, status)
-            .where(DeviceInstanceTemplateEntity::getDevice_id, deviceId)
+            .where(DeviceInstanceTemplateEntity::getDeviceId, deviceId)
             .execute();
     }
 }

@@ -17,4 +17,8 @@ public class DeviceInstancesTemplateServiceImpl extends ServiceImpl<DeviceInstan
     public void updateStateByDeviceId(String deviceId,String state) {
         deviceInstancesTemplateMapper.updateStateByDeviceId(deviceId,state);
     }
+
+    public DeviceInstancesTemplate selectById(String id) {
+        return deviceInstancesTemplateMapper.selectById(id);
+    }
 }

@@ -1,6 +1,7 @@
 package org.jetlinks.community.standalone.task;
 
 import cn.hutool.core.collection.CollectionUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.jetlinks.community.standalone.goview.v2.model.DeviceInstancesTemplate;
 import org.jetlinks.community.standalone.goview.v2.service.DeviceInstancesTemplateService;
@@ -25,7 +26,9 @@ public class QuartzTast {
     public void scheduleTasks() throws SchedulerException {
         Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
         scheduler.start();
-        List<DeviceInstancesTemplate> templateList = deviceInstancesTemplateService.list();
+        LambdaQueryWrapper<DeviceInstancesTemplate> wrapper = new LambdaQueryWrapper<>();
+        wrapper.isNotNull(DeviceInstancesTemplate::getSamplingFrequency);
+        List<DeviceInstancesTemplate> templateList = deviceInstancesTemplateService.list(wrapper);
         if(CollectionUtil.isNotEmpty(templateList)){
             for (DeviceInstancesTemplate task : templateList) {
                 JobDetail jobDetail = JobBuilder.newJob(TaskJob.class)

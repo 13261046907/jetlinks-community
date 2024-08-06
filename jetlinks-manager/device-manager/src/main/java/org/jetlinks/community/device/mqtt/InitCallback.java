@@ -74,7 +74,7 @@ public class InitCallback implements MqttCallback {
               Mono<DeviceInstanceTemplateEntity> deviceInstanceTemplate = deviceInstanceTemplateService.findByDeviceId(deviceId);
               DeviceInstanceTemplateEntity deviceInstanceTemplateEntity = deviceInstanceTemplate.block();
               if(!Objects.isNull(deviceInstanceTemplateEntity)){
-                  Integer deviceType = deviceInstanceTemplateEntity.getDevice_type();
+                  Integer deviceType = deviceInstanceTemplateEntity.getDeviceType();
                   if(!Objects.isNull(deviceType)){
                       if(1 == deviceType){
                           //属性设备
@@ -103,8 +103,8 @@ public class InitCallback implements MqttCallback {
                           }
                       }else {
                           //开关设备,验证发送的指令和收到的消息是否一致并修改开关状态
-                          String openInstruction = deviceInstanceTemplateEntity.getOpen_instruction();
-                          String closeInstruction = deviceInstanceTemplateEntity.getClose_instruction();
+                          String openInstruction = deviceInstanceTemplateEntity.getOpenInstruction();
+                          String closeInstruction = deviceInstanceTemplateEntity.getCloseInstruction();
                           if(convertedHexString.equals(openInstruction)){
                               //开
                               deviceInstanceTemplateService.updateStatusById("开",deviceId);

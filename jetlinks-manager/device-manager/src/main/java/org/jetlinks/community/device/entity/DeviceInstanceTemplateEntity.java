@@ -4,10 +4,9 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hswebframework.ezorm.rdb.mapping.annotation.Comment;
 import org.hswebframework.web.api.crud.entity.GenericEntity;
-import org.hswebframework.web.api.crud.entity.RecordCreationEntity;
-import org.hswebframework.web.api.crud.entity.RecordModifierEntity;
 import org.hswebframework.web.crud.annotation.EnableEntityEvent;
 
+import javax.persistence.Column;
 import javax.persistence.Table;
 
 @Table(name = "dev_device_instance_template")
@@ -22,31 +21,37 @@ public class DeviceInstanceTemplateEntity extends GenericEntity<String> {
     /**
      * 设备类型
      */
-    private Integer device_type;
+    @Column(name = "device_type")
+    private Integer deviceType;
 
-    private String device_id;
+    @Column(name = "device_id")
+    private String deviceId;
 
     private String topic;
 
     /**
      * 设备地址
      */
-    private String device_address;
+    @Column(name = "device_address")
+    private String deviceAddress;
 
     /**
      * 功能码
      */
-    private String function_code;
+    @Column(name = "function_code")
+    private String functionCode;
 
     /**
      * 寄存器地址
      */
-    private String register_address;
+    @Column(name = "register_address")
+    private String registerAddress;
 
     /**
      * 数据长度
      */
-    private String data_length;
+    @Column(name = "data_length")
+    private String dataLength;
 
     /**
      * 指令
@@ -56,36 +61,43 @@ public class DeviceInstanceTemplateEntity extends GenericEntity<String> {
     /**
      * 开指令
      */
-    private String open_instruction;
+    @Column(name = "open_instruction")
+    private String openInstruction;
 
     /**
      * 关指令
      */
-    private String close_instruction;
+    @Column(name = "deviceclose_instruction_id")
+    private String closeInstruction;
 
     private String status;
 
     /**
      * 采集公式
      */
-    private String collect_formula;
+    @Column(name = "collect_formula")
+    private String collectFormula;
 
     /**
      * 控制公式
      */
-    private String control_formula;
+    @Column(name = "control_formula")
+    private String controlFormula;
 
     /**
      * 采集频率
      */
-    private String sampling_frequency;
+    @Column(name = "sampling_frequency")
+    private String samplingFrequency;
 
     /**
      * 标题
      */
     private String title;
 
-    private String create_time;
+    @Column(name = "create_time")
+    private String createTime;
 
-    private String create_userId;
+    @Column(name = "create_userId")
+    private String createUserId;
 }
