@@ -21,6 +21,12 @@ public class DeviceInstancesTemplate implements Serializable {
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
+
+    /**
+     * 设备类型
+     */
+    private Integer deviceType;
+
     private String deviceId;
 
     private String topic;
@@ -49,6 +55,18 @@ public class DeviceInstancesTemplate implements Serializable {
      * 指令
      */
     private String instruction;
+
+    /**
+     * 开指令
+     */
+    private String openInstruction;
+
+    /**
+     * 关指令
+     */
+    private String closeInstruction;
+
+    private String status;
 
     /**
      * 采集公式
