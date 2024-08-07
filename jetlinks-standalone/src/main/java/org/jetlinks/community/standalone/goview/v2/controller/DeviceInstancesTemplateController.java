@@ -4,6 +4,8 @@ import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.apache.commons.lang3.StringUtils;
+import org.jetlinks.community.standalone.enums.TaskEnum;
 import org.jetlinks.community.standalone.goview.v2.common.base.BaseController;
 import org.jetlinks.community.standalone.goview.v2.common.domain.AjaxResult;
 import org.jetlinks.community.standalone.goview.v2.common.domain.ResultTable;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/template")
@@ -46,7 +49,7 @@ public class DeviceInstancesTemplateController extends BaseController {
     @PostMapping("/add")
     @ResponseBody
     public AjaxResult add(@RequestBody DeviceInstancesTemplate deviceInstancesTemplate){
-        deviceInstancesTemplate.setCreateTime(DateUtil.now());
+        deviceInstancesTemplate = extracted(deviceInstancesTemplate);
         boolean b=deviceInstancesTemplateService.save(deviceInstancesTemplate);
         if(b){
             return successData(200, deviceInstancesTemplate).put("msg", "创建成功");
@@ -60,6 +63,7 @@ public class DeviceInstancesTemplateController extends BaseController {
     @ResponseBody
     public AjaxResult edit(@RequestBody DeviceInstancesTemplate deviceInstancesTemplate)
     {
+        deviceInstancesTemplate = extracted(deviceInstancesTemplate);
         Boolean b= deviceInstancesTemplateService.updateById(deviceInstancesTemplate);
         if(b){
             return success();
@@ -73,5 +77,37 @@ public class DeviceInstancesTemplateController extends BaseController {
     {
         deviceInstancesTemplateService.updateStateByDeviceId(deviceVo.getDeviceId(),deviceVo.getState());
         return success();
+    }
+
+    private DeviceInstancesTemplate extracted(DeviceInstancesTemplate deviceInstancesTemplate) {
+        deviceInstancesTemplate.setCreateTime(DateUtil.now());
+        //指令拼接
+        String deviceAddress = deviceInstancesTemplate.getDeviceAddress();
+        String functionCode = deviceInstancesTemplate.getFunctionCode();
+        String openInstruction = "";
+        String closeInstruction = "";
+        String instruction = "";
+        if(deviceInstancesTemplate.getDeviceType() == 2){
+            //开关
+            openInstruction = deviceAddress + functionCode + deviceInstancesTemplate.getOpenInstruction();
+            closeInstruction = deviceAddress + functionCode + deviceInstancesTemplate.getCloseInstruction();
+            deviceInstancesTemplate.setOpenInstruction(openInstruction);
+            deviceInstancesTemplate.setCloseInstruction(closeInstruction);
+        }else {
+            //属性
+            instruction = deviceAddress + functionCode + deviceInstancesTemplate.getInstruction();
+            deviceInstancesTemplate.setInstruction(instruction);
+        }
+        //采集时间
+        String samplingFrequency = deviceInstancesTemplate.getSamplingFrequency();
+        String cron = "";
+        if(StringUtils.isNotBlank(samplingFrequency)){
+            TaskEnum taskKey = TaskEnum.getTaskKey(samplingFrequency);
+            if(!Objects.isNull(taskKey)){
+                cron = taskKey.getKey();
+            }
+        }
+        deviceInstancesTemplate.setSamplingFrequency(cron);
+        return deviceInstancesTemplate;
     }
 }
