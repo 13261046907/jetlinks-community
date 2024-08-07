@@ -3,6 +3,7 @@ package org.jetlinks.community.standalone.goview.v2.model;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
+import javax.persistence.Transient;
 import java.io.Serializable;
 
 /**
@@ -84,6 +85,12 @@ public class DeviceInstancesTemplate implements Serializable {
      * 采集频率
      */
     private String samplingFrequency;
+
+    /**
+     * 采集频率
+     */
+    @TableField(exist = false)
+    private String samplingFrequencyName;
 
     /**
      * 标题

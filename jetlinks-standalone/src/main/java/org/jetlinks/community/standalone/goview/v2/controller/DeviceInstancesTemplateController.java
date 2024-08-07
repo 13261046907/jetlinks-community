@@ -1,5 +1,6 @@
 package org.jetlinks.community.standalone.goview.v2.controller;
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.swagger.annotations.ApiOperation;
@@ -33,6 +34,17 @@ public class DeviceInstancesTemplateController extends BaseController {
         LambdaQueryWrapper<DeviceInstancesTemplate> objectLambdaQueryWrapper = new LambdaQueryWrapper<>();
         objectLambdaQueryWrapper.eq(DeviceInstancesTemplate::getDeviceId,deviceId);
         List<DeviceInstancesTemplate> list = deviceInstancesTemplateService.list(objectLambdaQueryWrapper);
+        if (CollectionUtil.isNotEmpty(list)){
+            list.stream().forEach(deviceInstancesTemplate -> {
+                String samplingFrequency = deviceInstancesTemplate.getSamplingFrequency();
+                if (StringUtils.isNotBlank(samplingFrequency)){
+                    TaskEnum taskKey = TaskEnum.getTaskValue(samplingFrequency);
+                    if(!Objects.isNull(taskKey)){
+                        deviceInstancesTemplate.setSamplingFrequencyName(taskKey.getName());
+                    }
+                }
+            });
+        }
         ResultTable resultTable=new ResultTable();
         resultTable.setData(list);
         resultTable.setCode(200);
