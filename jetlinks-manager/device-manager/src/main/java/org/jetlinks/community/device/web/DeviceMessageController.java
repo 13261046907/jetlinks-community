@@ -70,7 +70,6 @@ public class DeviceMessageController {
             MqttMessage message = new MqttMessage(payload);
             message.setId((int) (System.currentTimeMillis() / 1000));
             redisUtil.set(redisKey,instruction);
-            String currentMessage = redisUtil.get(redisKey)+"";
             log.info("invokedFunction-topic:{},message:{}",sendTopic,crcResult);
             mqttConnect.pub(sendTopic, message);
             mqttConnect.sub(acceptTopic);

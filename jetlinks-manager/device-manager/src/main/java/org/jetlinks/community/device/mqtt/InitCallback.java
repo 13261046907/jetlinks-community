@@ -107,10 +107,10 @@ public class InitCallback implements MqttCallback {
                           String closeInstruction = deviceInstanceTemplateEntity.getCloseInstruction();
                           if(convertedHexString.equals(openInstruction)){
                               //开
-                              deviceInstanceTemplateService.updateStatusById("开",deviceId);
+                              deviceInstanceTemplateService.updateStatusById("1",deviceId);
                           }else if(convertedHexString.equals(closeInstruction)){
                               //关
-                              deviceInstanceTemplateService.updateStatusById("关",deviceId);
+                              deviceInstanceTemplateService.updateStatusById("0",deviceId);
                           }else {
                               log.error("开关指令收发不一致,deviceId:{},收指令:{},发指令:{},关指令:{}",deviceId,convertedHexString,openInstruction,closeInstruction);
                           }
