@@ -36,7 +36,7 @@ public class TaskJob implements Job {
             DeviceInstancesTemplate deviceInstancesTemplate = deviceInstancesTemplateService.getById(id);
             if(!Objects.isNull(deviceInstancesTemplate)){
                 String instruction = deviceInstancesTemplate.getInstruction();
-                String topic = deviceInstancesTemplate.getTopic();
+                String topic = deviceInstancesTemplate.getSendTopic();
                 String crcResult = CRC16Utils.getCrcResult(instruction);
                 log.info("crcResult:{}", JSONObject.toJSON(crcResult));
                 byte[] payload = hexStringToByteArra(crcResult);

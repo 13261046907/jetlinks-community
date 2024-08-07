@@ -15,7 +15,6 @@ import org.jetlinks.community.device.entity.DevicePropertiesEntity;
 import org.jetlinks.community.device.mqtt.CRC16Utils;
 import org.jetlinks.community.device.mqtt.InitCallback;
 import org.jetlinks.community.device.mqtt.MQTTConnect;
-import org.jetlinks.community.device.mqtt.MqttConstant;
 import org.jetlinks.community.utils.ErrorUtils;
 import org.jetlinks.core.device.DeviceOperator;
 import org.jetlinks.core.device.DeviceRegistry;
@@ -60,7 +59,8 @@ public class DeviceMessageController {
     @GetMapping("invoked/{deviceId}/function")
     @SneakyThrows
     @Deprecated
-    public Flux<?> invokedDeviceMessage(@PathVariable String deviceId,@RequestParam String topic,
+    public Flux<?> invokedDeviceMessage(@PathVariable String deviceId,@RequestParam String sendTopic,
+                                        @RequestParam String acceptTopic,
                                    @RequestParam String instruction) {
         try {
             String crcResult = CRC16Utils.getCrcResult(instruction);
@@ -71,8 +71,9 @@ public class DeviceMessageController {
             message.setId((int) (System.currentTimeMillis() / 1000));
             redisUtil.set(redisKey,instruction);
             String currentMessage = redisUtil.get(redisKey)+"";
-            log.info("invokedFunction-topic:{},message:{}",topic,currentMessage);
-            mqttConnect.pub(topic, message);
+            log.info("invokedFunction-topic:{},message:{}",sendTopic,crcResult);
+            mqttConnect.pub(sendTopic, message);
+            mqttConnect.sub(acceptTopic);
         } catch (MqttException e) {
             log.error(e.getMessage(), e);
             e.printStackTrace();

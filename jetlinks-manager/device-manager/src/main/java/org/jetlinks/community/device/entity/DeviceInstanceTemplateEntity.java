@@ -27,7 +27,11 @@ public class DeviceInstanceTemplateEntity extends GenericEntity<String> {
     @Column(name = "device_id")
     private String deviceId;
 
-    private String topic;
+    @Column(name = "send_topic")
+    private String sendTopic;
+
+    @Column(name = "accept_topic")
+    private String acceptTopic;
 
     /**
      * 设备地址
