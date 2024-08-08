@@ -35,17 +35,19 @@ public class TaskJob implements Job {
         try {
             DeviceInstancesTemplate deviceInstancesTemplate = deviceInstancesTemplateService.getById(id);
             if(!Objects.isNull(deviceInstancesTemplate)){
-                String instruction = deviceInstancesTemplate.getInstruction();
-                String topic = deviceInstancesTemplate.getSendTopic();
-                String crcResult = CRC16Utils.getCrcResult(instruction);
-                log.info("crcResult:{}", JSONObject.toJSON(crcResult));
-                byte[] payload = hexStringToByteArra(crcResult);
-                String redisKey = "mqtt:"+ deviceInstancesTemplate.getDeviceId();
-                MqttMessage message = new MqttMessage(payload);
-                message.setId((int) (System.currentTimeMillis() / 1000));
-                redisUtil.set(redisKey,instruction);
-                log.info("invokedFunction-topic:{},message:{}",topic,crcResult);
-                mqttConnect.pub(topic, message);
+                if(deviceInstancesTemplate.getDeviceType()==1){
+                    String instruction = deviceInstancesTemplate.getInstructionCrc();
+                    String topic = deviceInstancesTemplate.getSendTopic();
+//                    String crcResult = CRC16Utils.getCrcResult(instruction);
+                    log.info("crcResult:{}", JSONObject.toJSON(instruction));
+                    byte[] payload = hexStringToByteArra(instruction);
+                    String redisKey = "mqtt:"+ deviceInstancesTemplate.getDeviceId();
+                    MqttMessage message = new MqttMessage(payload);
+                    message.setId((int) (System.currentTimeMillis() / 1000));
+                    redisUtil.set(redisKey,instruction);
+                    log.info("invokedFunction-topic:{},message:{}",topic,instruction);
+                    mqttConnect.pub(topic, message);
+                }
             }
         } catch (MqttException e) {
             log.error(e.getMessage(), e);
