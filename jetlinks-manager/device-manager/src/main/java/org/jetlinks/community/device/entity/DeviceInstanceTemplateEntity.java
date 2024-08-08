@@ -7,15 +7,18 @@ import org.hswebframework.web.api.crud.entity.GenericEntity;
 import org.hswebframework.web.crud.annotation.EnableEntityEvent;
 
 import javax.persistence.Column;
+import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Table(name = "dev_device_instance_template")
 @Comment("设备信息模版表")
-@EnableEntityEvent
 @Getter
 @Setter
+@EnableEntityEvent
 public class DeviceInstanceTemplateEntity extends GenericEntity<String> {
 
+    @Id
+    @Column(name = "id")
     private String id;
 
     /**
@@ -61,19 +64,26 @@ public class DeviceInstanceTemplateEntity extends GenericEntity<String> {
      * 指令
      */
     private String instruction;
+    @Column(name = "instruction_crc")
+    private String instructionCrc;
 
     /**
      * 开指令
      */
     @Column(name = "open_instruction")
     private String openInstruction;
+    @Column(name = "open_instruction_crc")
+    private String openInstructionCrc;
 
     /**
      * 关指令
      */
-    @Column(name = "deviceclose_instruction_id")
+    @Column(name = "close_instruction")
     private String closeInstruction;
+    @Column(name = "close_instruction_crc")
+    private String closeInstructionCrc;
 
+    @Column(name = "status")
     private String status;
 
     /**
@@ -97,6 +107,7 @@ public class DeviceInstanceTemplateEntity extends GenericEntity<String> {
     /**
      * 标题
      */
+    @Column(name = "title")
     private String title;
 
     @Column(name = "create_time")

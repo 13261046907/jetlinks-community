@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.commons.lang3.StringUtils;
+import org.jetlinks.community.device.mqtt.CRC16Utils;
 import org.jetlinks.community.standalone.enums.TaskEnum;
 import org.jetlinks.community.standalone.goview.v2.common.base.BaseController;
 import org.jetlinks.community.standalone.goview.v2.common.domain.AjaxResult;
@@ -96,19 +97,20 @@ public class DeviceInstancesTemplateController extends BaseController {
         //指令拼接
         String deviceAddress = deviceInstancesTemplate.getDeviceAddress();
         String functionCode = deviceInstancesTemplate.getFunctionCode();
-        String openInstruction = "";
-        String closeInstruction = "";
-        String instruction = "";
+        String registerAddress = deviceInstancesTemplate.getRegisterAddress();
         if(deviceInstancesTemplate.getDeviceType() == 2){
             //开关
-            openInstruction = deviceAddress + functionCode + deviceInstancesTemplate.getOpenInstruction();
-            closeInstruction = deviceAddress + functionCode + deviceInstancesTemplate.getCloseInstruction();
-            deviceInstancesTemplate.setOpenInstruction(openInstruction);
-            deviceInstancesTemplate.setCloseInstruction(closeInstruction);
+            String openInstruction = deviceAddress + functionCode + registerAddress + deviceInstancesTemplate.getOpenInstruction();
+            String closeInstruction = deviceAddress + functionCode + registerAddress + deviceInstancesTemplate.getCloseInstruction();
+            String openInstructionCrc = CRC16Utils.getCrcResult(openInstruction);
+            String closeInstructionCrc = CRC16Utils.getCrcResult(closeInstruction);
+            deviceInstancesTemplate.setOpenInstructionCrc(openInstructionCrc);
+            deviceInstancesTemplate.setCloseInstructionCrc(closeInstructionCrc);
         }else {
             //属性
-            instruction = deviceAddress + functionCode + deviceInstancesTemplate.getInstruction();
-            deviceInstancesTemplate.setInstruction(instruction);
+            String instruction = deviceAddress + functionCode + registerAddress + deviceInstancesTemplate.getInstruction();
+            String instructionCrc = CRC16Utils.getCrcResult(instruction);
+            deviceInstancesTemplate.setInstructionCrc(instructionCrc);
         }
         //采集时间
         String samplingFrequency = deviceInstancesTemplate.getSamplingFrequency();

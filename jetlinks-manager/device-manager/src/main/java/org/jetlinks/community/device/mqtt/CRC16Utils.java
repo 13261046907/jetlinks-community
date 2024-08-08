@@ -123,7 +123,7 @@ public class CRC16Utils {
     }
 
     public static void main(String[] args) {
-        String hexString = "030301F40002";
+        String hexString = "02050401FF00";
         String crcResult = getCrcResult(hexString);
         System.out.println(crcResult);
     }

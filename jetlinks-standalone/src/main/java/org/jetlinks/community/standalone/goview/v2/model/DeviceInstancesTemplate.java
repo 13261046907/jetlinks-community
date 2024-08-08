@@ -59,15 +59,21 @@ public class DeviceInstancesTemplate implements Serializable {
      */
     private String instruction;
 
+    private String instructionCrc;
+
     /**
      * 开指令
      */
     private String openInstruction;
 
+    private String openInstructionCrc;
+
     /**
      * 关指令
      */
     private String closeInstruction;
+
+    private String closeInstructionCrc;
 
     private String status;
 

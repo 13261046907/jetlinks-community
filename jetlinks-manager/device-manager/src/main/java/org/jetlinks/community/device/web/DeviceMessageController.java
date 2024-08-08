@@ -11,10 +11,10 @@ import org.hswebframework.web.authorization.annotation.Resource;
 import org.hswebframework.web.exception.BusinessException;
 import org.hswebframework.web.id.IDGenerator;
 import org.jetlinks.community.device.configuration.RedisUtil;
+import org.jetlinks.community.device.entity.DeviceInstanceTemplateEntity;
 import org.jetlinks.community.device.entity.DevicePropertiesEntity;
-import org.jetlinks.community.device.mqtt.CRC16Utils;
-import org.jetlinks.community.device.mqtt.InitCallback;
 import org.jetlinks.community.device.mqtt.MQTTConnect;
+import org.jetlinks.community.device.service.DeviceInstanceTemplateService;
 import org.jetlinks.community.utils.ErrorUtils;
 import org.jetlinks.core.device.DeviceOperator;
 import org.jetlinks.core.device.DeviceRegistry;
@@ -34,6 +34,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 
 @RestController
@@ -46,12 +47,13 @@ public class DeviceMessageController {
 
     @Autowired
     private DeviceRegistry registry;
-
+    @Autowired
+    private DeviceInstanceTemplateService deviceInstanceTemplateService;
     private final MQTTConnect mqttConnect;
     @Autowired
     private RedisUtil redisUtil;
 
-    public DeviceMessageController(MQTTConnect mqttConnect, InitCallback initCallback) {
+    public DeviceMessageController(MQTTConnect mqttConnect) {
         this.mqttConnect = mqttConnect;
     }
 
@@ -63,17 +65,39 @@ public class DeviceMessageController {
                                         @RequestParam String acceptTopic,
                                    @RequestParam String instruction) {
         try {
-            String crcResult = CRC16Utils.getCrcResult(instruction);
-            log.info("crcResult:{}",JSONObject.toJSON(crcResult));
-            byte[] payload = hexStringToByteArray(crcResult);
-            String redisKey = "mqtt:"+deviceId;
-            MqttMessage message = new MqttMessage(payload);
-            message.setId((int) (System.currentTimeMillis() / 1000));
-            redisUtil.set(redisKey,instruction);
-            log.info("invokedFunction-topic:{},message:{}",sendTopic,crcResult);
-            mqttConnect.pub(sendTopic, message);
-            mqttConnect.sub(acceptTopic);
-        } catch (MqttException e) {
+//            String crcResult = CRC16Utils.getCrcResult(instruction);
+            /**
+             * 1、根据instruction指令查询设备模版表唯一一条数据
+             * 2、判断设备类型，属性key:deviceId,开关key:instruction
+             */
+            Mono<DeviceInstanceTemplateEntity> byInstruction = deviceInstanceTemplateService.findByInstruction(instruction);
+            byInstruction.subscribe(deviceInstanceTemplateEntity -> {
+                // 异步处理每个结果
+                if(!Objects.isNull(deviceInstanceTemplateEntity)) {
+                    Integer deviceType = deviceInstanceTemplateEntity.getDeviceType();
+                    if (!Objects.isNull(deviceType)) {
+                        String redisKey = "";
+                        if (1 == deviceType) {
+                            redisKey = "mqtt:"+deviceId;
+                        }else {
+                            redisKey = "mqtt:"+instruction;
+                        }
+                        log.info("crcResult:{}",JSONObject.toJSON(instruction));
+                        byte[] payload = hexStringToByteArray(instruction);
+                        MqttMessage message = new MqttMessage(payload);
+                        message.setId((int) (System.currentTimeMillis() / 1000));
+                        redisUtil.set(redisKey,instruction);
+                        log.info("invokedFunction-topic:{},message:{}",sendTopic,instruction);
+                        try {
+                            mqttConnect.pub(sendTopic, message);
+                            mqttConnect.sub(acceptTopic);
+                        } catch (MqttException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            });
+        } catch (Exception e) {
             log.error(e.getMessage(), e);
             e.printStackTrace();
         }

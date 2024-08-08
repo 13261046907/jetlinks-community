@@ -62,57 +62,67 @@ public class InitCallback implements MqttCallback {
       try {
           String convertedHexString = byteArrayToHexString(message.getPayload());
           log.info("TOPIC: [{}] 消息: {}，id:{}", topic, convertedHexString,message.getId());
-          String redisKey = "mqtt:"+convertedHexString.substring(0,2);
-          String redisKeyValue = redisUtil.get(redisKey)+"";
-          log.info("redisKey:{},currentMessage:{}",redisKey,redisKeyValue);
-          if(StringUtils.isNotBlank(redisKeyValue)&& redisKeyValue.length() >=12){
-              String startFunctionStr = redisKeyValue.substring(8, 12);
-              //取整获取字符串长度
-              Integer startFunction = Integer.valueOf(startFunctionStr);
-              log.info("currentMessage:{},startFunction:{}",redisKeyValue,startFunction);
-              String deviceId= redisKeyValue.substring(0, 2);
-              Mono<DeviceInstanceTemplateEntity> deviceInstanceTemplate = deviceInstanceTemplateService.findByDeviceId(deviceId);
-              DeviceInstanceTemplateEntity deviceInstanceTemplateEntity = deviceInstanceTemplate.block();
-              if(!Objects.isNull(deviceInstanceTemplateEntity)){
-                  Integer deviceType = deviceInstanceTemplateEntity.getDeviceType();
-                  if(!Objects.isNull(deviceType)){
-                      if(1 == deviceType){
-                          //属性设备
-                          Mono<DeviceDetail> deviceDetail = service.getDeviceDetail(deviceId);
-                          DeviceDetail detail = deviceDetail.block();
-                          if(!Objects.isNull(detail)){
-                              log.info("DeviceDetail:{}",JSONObject.toJSONString(detail));
-                              String metadata = detail.getMetadata();
-                              String productId = detail.getProductId();
-                              List<ProductProperties> propertiesList = new ArrayList<>();
-                              if(StringUtils.isNotBlank(metadata)){
-                                  JSONObject metadataJson = JSONObject.parseObject(metadata);
-                                  propertiesList = JSONArray.parseArray(metadataJson.getString("properties"), ProductProperties.class);
-                              }
-                              List<String> hexList = getHexList(convertedHexString, startFunction);
-                              log.info("hexList:{}",JSONObject.toJSONString(hexList));
-                              if(!CollectionUtils.isEmpty(hexList) && !CollectionUtils.isEmpty(propertiesList)){
-                                  for (int i = 0; i <= propertiesList.size(); i++) { // Adjust t
-                                      Map<String, Object> propertiesMap = new HashMap<>();
-                                      ProductProperties productProperties = propertiesList.get(i);
-                                      propertiesMap.put(productProperties.getId(),hexList.get(i));
-                                      log.info("deviceId:{},param:{}",deviceId,JSONObject.toJSONString(propertiesMap));
-                                      syncSendMessageToDevice(productId,deviceId,propertiesMap);
+          /**
+           * 1、根据instruction指令查询设备模版表唯一一条数据
+           * 2、判断设备类型，属性key:deviceId,开关key:instruction
+           */
+          Mono<DeviceInstanceTemplateEntity> byInstruction = deviceInstanceTemplateService.findByInstruction(convertedHexString);
+          DeviceInstanceTemplateEntity deviceInstanceTemplateEntity = byInstruction.block();
+          if(!Objects.isNull(deviceInstanceTemplateEntity)) {
+              String templateEntityId = deviceInstanceTemplateEntity.getId();
+              //开关类型，发送指令 = 接受指令
+              Integer deviceType = deviceInstanceTemplateEntity.getDeviceType();
+              if (!Objects.isNull(deviceType)) {
+                  if (2 == deviceType) {
+                      if(deviceInstanceTemplateEntity.getOpenInstructionCrc().equals(convertedHexString)){
+                          //开指令
+                          deviceInstanceTemplateService.updateStatusById("1",templateEntityId);
+                      }else if(deviceInstanceTemplateEntity.getCloseInstructionCrc().equals(convertedHexString)){
+                          //关指令
+                          deviceInstanceTemplateService.updateStatusById("0",templateEntityId);
+                      }
+                  }
+              }
+          }else {
+              String redisKey = "mqtt:"+convertedHexString.substring(0,2);
+              String redisKeyValue = redisUtil.get(redisKey)+"";
+              log.info("redisKey:{},currentMessage:{}",redisKey,redisKeyValue);
+              if(StringUtils.isNotBlank(redisKeyValue)&& redisKeyValue.length() >=12) {
+                  String startFunctionStr = redisKeyValue.substring(8, 12);
+                  String deviceId = redisKeyValue.substring(0, 2);
+                  Mono<DeviceInstanceTemplateEntity> template = deviceInstanceTemplateService.findByDeviceId(deviceId);
+                  DeviceInstanceTemplateEntity templateEntity = template.block();
+                  if (!Objects.isNull(templateEntity)) {
+                      Integer deviceType = templateEntity.getDeviceType();
+                      if (!Objects.isNull(deviceType)) {
+                          if (1 == deviceType) {
+                              //取整获取字符串长度
+                              Integer startFunction = Integer.valueOf(startFunctionStr);
+                              log.info("currentMessage:{},startFunction:{}", redisKeyValue, startFunction);
+                              //属性设备
+                              Mono<DeviceDetail> deviceDetail = service.getDeviceDetail(deviceId);
+                              DeviceDetail detail = deviceDetail.block();
+                              if (!Objects.isNull(detail)) {
+                                  log.info("DeviceDetail:{}", JSONObject.toJSONString(detail));
+                                  String metadata = detail.getMetadata();
+                                  String productId = detail.getProductId();
+                                  List<ProductProperties> propertiesList = new ArrayList<>();
+                                  if (StringUtils.isNotBlank(metadata)) {
+                                      JSONObject metadataJson = JSONObject.parseObject(metadata);
+                                      propertiesList = JSONArray.parseArray(metadataJson.getString("properties"), ProductProperties.class);
+                                  }
+                                  List<String> hexList = getHexList(convertedHexString, startFunction);
+                                  log.info("hexList:{}", JSONObject.toJSONString(hexList));
+                                  if (!CollectionUtils.isEmpty(hexList) && !CollectionUtils.isEmpty(propertiesList)) {
+                                      for (int i = 0; i <= propertiesList.size(); i++) { // Adjust t
+                                          Map<String, Object> propertiesMap = new HashMap<>();
+                                          ProductProperties productProperties = propertiesList.get(i);
+                                          propertiesMap.put(productProperties.getId(), hexList.get(i));
+                                          log.info("deviceId:{},param:{}", deviceId, JSONObject.toJSONString(propertiesMap));
+                                          syncSendMessageToDevice(productId, deviceId, propertiesMap);
+                                      }
                                   }
                               }
-                          }
-                      }else {
-                          //开关设备,验证发送的指令和收到的消息是否一致并修改开关状态
-                          String openInstruction = deviceInstanceTemplateEntity.getOpenInstruction();
-                          String closeInstruction = deviceInstanceTemplateEntity.getCloseInstruction();
-                          if(convertedHexString.equals(openInstruction)){
-                              //开
-                              deviceInstanceTemplateService.updateStatusById("1",deviceId);
-                          }else if(convertedHexString.equals(closeInstruction)){
-                              //关
-                              deviceInstanceTemplateService.updateStatusById("0",deviceId);
-                          }else {
-                              log.error("开关指令收发不一致,deviceId:{},收指令:{},发指令:{},关指令:{}",deviceId,convertedHexString,openInstruction,closeInstruction);
                           }
                       }
                   }
@@ -125,7 +135,6 @@ public class InitCallback implements MqttCallback {
 
   private void syncSendMessageToDevice(String productId,String deviceId,Map<String, Object> props){
       service.writeProperties(productId,deviceId, props);
-//      HttpUtils.sendPost("http://127.0.0.1:8848/device/instance/"+deviceId+"/property",message);
   }
 
   private String hexToStr(String hexValue){
