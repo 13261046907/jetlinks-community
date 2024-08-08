@@ -118,10 +118,11 @@ public class DeviceInstancesTemplateController extends BaseController {
         if(StringUtils.isNotBlank(samplingFrequency)){
             TaskEnum taskKey = TaskEnum.getTaskKey(samplingFrequency);
             if(!Objects.isNull(taskKey)){
-                cron = taskKey.getKey();
+                deviceInstancesTemplate.setSamplingFrequency(taskKey.getKey());
             }
+        }else {
+            deviceInstancesTemplate.setSamplingFrequency(null);
         }
-        deviceInstancesTemplate.setSamplingFrequency(cron);
         return deviceInstancesTemplate;
     }
 }

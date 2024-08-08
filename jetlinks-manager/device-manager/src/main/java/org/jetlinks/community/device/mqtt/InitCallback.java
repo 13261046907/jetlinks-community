@@ -68,72 +68,71 @@ public class InitCallback implements MqttCallback {
            */
           Mono<DeviceInstanceTemplateEntity> byInstruction = deviceInstanceTemplateService.findByInstruction(convertedHexString);
           // 判断是否为空
-          byInstruction
-              .switchIfEmpty(Mono.defer(() -> {
-                  // 这里可以返回一个默认的值或执行其他逻辑
-                  System.out.println("没有找到 DeviceInstanceTemplateEntity");
-                  String redisKey = "mqtt:"+convertedHexString.substring(0,2);
-                  String redisKeyValue = redisUtil.get(redisKey)+"";
-                  log.info("redisKey:{},currentMessage:{}",redisKey,redisKeyValue);
-                  if(StringUtils.isNotBlank(redisKeyValue)&& redisKeyValue.length() >=12) {
-                      String startFunctionStr = redisKeyValue.substring(8, 12);
-                      String deviceId = redisKeyValue.substring(0, 2);
-                      Mono<DeviceInstanceTemplateEntity> template = deviceInstanceTemplateService.findByDeviceId(deviceId);
-                      DeviceInstanceTemplateEntity templateEntity = template.block();
-                      if (!Objects.isNull(templateEntity)) {
-                          Integer deviceType = templateEntity.getDeviceType();
-                          if (!Objects.isNull(deviceType)) {
-                              if (1 == deviceType) {
-                                  //取整获取字符串长度
-                                  Integer startFunction = Integer.valueOf(startFunctionStr);
-                                  log.info("currentMessage:{},startFunction:{}", redisKeyValue, startFunction);
-                                  //属性设备
-                                  Mono<DeviceDetail> deviceDetail = service.getDeviceDetail(deviceId);
-                                  DeviceDetail detail = deviceDetail.block();
-                                  if (!Objects.isNull(detail)) {
-                                      log.info("DeviceDetail:{}", JSONObject.toJSONString(detail));
-                                      String metadata = detail.getMetadata();
-                                      String productId = detail.getProductId();
-                                      List<ProductProperties> propertiesList = new ArrayList<>();
-                                      if (StringUtils.isNotBlank(metadata)) {
-                                          JSONObject metadataJson = JSONObject.parseObject(metadata);
-                                          propertiesList = JSONArray.parseArray(metadataJson.getString("properties"), ProductProperties.class);
-                                      }
-                                      List<String> hexList = getHexList(convertedHexString, startFunction);
-                                      log.info("hexList:{}", JSONObject.toJSONString(hexList));
-                                      if (!CollectionUtils.isEmpty(hexList) && !CollectionUtils.isEmpty(propertiesList)) {
-                                          for (int i = 0; i <= propertiesList.size(); i++) { // Adjust t
-                                              Map<String, Object> propertiesMap = new HashMap<>();
-                                              ProductProperties productProperties = propertiesList.get(i);
-                                              propertiesMap.put(productProperties.getId(), hexList.get(i));
-                                              log.info("deviceId:{},param:{}", deviceId, JSONObject.toJSONString(propertiesMap));
-                                              syncSendMessageToDevice(productId, deviceId, propertiesMap);
-                                          }
+          DeviceInstanceTemplateEntity deviceInstanceTemplateEntity = byInstruction.block();
+          log.info("deviceInstanceTemplateEntity:{}", JSONObject.toJSONString(deviceInstanceTemplateEntity));
+          if(!Objects.isNull(deviceInstanceTemplateEntity)){
+            // 处理获取到的 DeviceInstanceTemplateEntity
+              String templateEntityId = deviceInstanceTemplateEntity.getId();
+              //开关类型，发送指令 = 接受指令
+              Integer deviceType = deviceInstanceTemplateEntity.getDeviceType();
+              if (!Objects.isNull(deviceType)) {
+                  if(deviceInstanceTemplateEntity.getOpenInstructionCrc().equals(convertedHexString)){
+                      //开指令
+                      log.info("开:templateEntityId:{}",templateEntityId);
+                      deviceInstanceTemplateService.updateStatusById("1",templateEntityId);
+                  }else if(deviceInstanceTemplateEntity.getCloseInstructionCrc().equals(convertedHexString)){
+                      log.info("关:templateEntityId:{}",templateEntityId);
+                      //关指令
+                      deviceInstanceTemplateService.updateStatusById("0",templateEntityId);
+                  }
+              }
+          }else {
+              // 这里可以返回一个默认的值或执行其他逻辑
+              System.out.println("没有找到 DeviceInstanceTemplateEntity");
+              String redisKey = "mqtt:"+convertedHexString.substring(0,2);
+              String redisKeyValue = redisUtil.get(redisKey)+"";
+              log.info("redisKey:{},currentMessage:{}",redisKey,redisKeyValue);
+              if(StringUtils.isNotBlank(redisKeyValue)&& redisKeyValue.length() >=12) {
+                  String startFunctionStr = redisKeyValue.substring(8, 12);
+                  String deviceId = redisKeyValue.substring(0, 2);
+                  Mono<DeviceInstanceTemplateEntity> template = deviceInstanceTemplateService.findByDeviceId(deviceId);
+                  DeviceInstanceTemplateEntity templateEntity = template.block();
+                  if (!Objects.isNull(templateEntity)) {
+                      Integer deviceType = templateEntity.getDeviceType();
+                      if (!Objects.isNull(deviceType)) {
+                          if (1 == deviceType) {
+                              //取整获取字符串长度
+                              Integer startFunction = Integer.valueOf(startFunctionStr);
+                              log.info("currentMessage:{},startFunction:{}", redisKeyValue, startFunction);
+                              //属性设备
+                              Mono<DeviceDetail> deviceDetail = service.getDeviceDetail(deviceId);
+                              DeviceDetail detail = deviceDetail.block();
+                              if (!Objects.isNull(detail)) {
+                                  log.info("DeviceDetail:{}", JSONObject.toJSONString(detail));
+                                  String metadata = detail.getMetadata();
+                                  String productId = detail.getProductId();
+                                  List<ProductProperties> propertiesList = new ArrayList<>();
+                                  if (StringUtils.isNotBlank(metadata)) {
+                                      JSONObject metadataJson = JSONObject.parseObject(metadata);
+                                      propertiesList = JSONArray.parseArray(metadataJson.getString("properties"), ProductProperties.class);
+                                  }
+                                  List<String> hexList = getHexList(convertedHexString, startFunction);
+                                  log.info("hexList:{}", JSONObject.toJSONString(hexList));
+                                  if (!CollectionUtils.isEmpty(hexList) && !CollectionUtils.isEmpty(propertiesList)) {
+                                      for (int i = 0; i <= propertiesList.size(); i++) { // Adjust t
+                                          Map<String, Object> propertiesMap = new HashMap<>();
+                                          ProductProperties productProperties = propertiesList.get(i);
+                                          propertiesMap.put(productProperties.getId(), hexList.get(i));
+                                          log.info("deviceId:{},param:{}", deviceId, JSONObject.toJSONString(propertiesMap));
+                                          syncSendMessageToDevice(productId, deviceId, propertiesMap);
                                       }
                                   }
                               }
                           }
                       }
                   }
-                  return null;
-              }))
-              .subscribe(deviceInstanceTemplateEntity -> {
-                  // 处理获取到的 DeviceInstanceTemplateEntity
-                  String templateEntityId = deviceInstanceTemplateEntity.getId();
-                  //开关类型，发送指令 = 接受指令
-                  Integer deviceType = deviceInstanceTemplateEntity.getDeviceType();
-                  if (!Objects.isNull(deviceType)) {
-                      if (2 == deviceType) {
-                          if(deviceInstanceTemplateEntity.getOpenInstructionCrc().equals(convertedHexString)){
-                              //开指令
-                              deviceInstanceTemplateService.updateStatusById("1",templateEntityId);
-                          }else if(deviceInstanceTemplateEntity.getCloseInstructionCrc().equals(convertedHexString)){
-                              //关指令
-                              deviceInstanceTemplateService.updateStatusById("0",templateEntityId);
-                          }
-                      }
-                  }
-              });
+              }
+          }
       }catch (Exception e){
           log.error(e.getMessage());
       }

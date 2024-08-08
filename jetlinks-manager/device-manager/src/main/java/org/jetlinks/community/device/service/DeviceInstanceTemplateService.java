@@ -25,6 +25,7 @@ public class DeviceInstanceTemplateService extends GenericReactiveCrudService<De
 
     public void updateStatusById(String status,String id) {
         String sql = "update dev_device_instance_template set status ="+status+" where id="+id;
+        log.info("executeSQL:{}:",sql);
         DbUtils.execute(sql);
     }
 }
