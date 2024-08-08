@@ -67,67 +67,71 @@ public class InitCallback implements MqttCallback {
            * 2、判断设备类型，属性key:deviceId,开关key:instruction
            */
           Mono<DeviceInstanceTemplateEntity> byInstruction = deviceInstanceTemplateService.findByInstruction(convertedHexString);
-          DeviceInstanceTemplateEntity deviceInstanceTemplateEntity = byInstruction.block();
-          if(!Objects.isNull(deviceInstanceTemplateEntity)) {
-              String templateEntityId = deviceInstanceTemplateEntity.getId();
-              //开关类型，发送指令 = 接受指令
-              Integer deviceType = deviceInstanceTemplateEntity.getDeviceType();
-              if (!Objects.isNull(deviceType)) {
-                  if (2 == deviceType) {
-                      if(deviceInstanceTemplateEntity.getOpenInstructionCrc().equals(convertedHexString)){
-                          //开指令
-                          deviceInstanceTemplateService.updateStatusById("1",templateEntityId);
-                      }else if(deviceInstanceTemplateEntity.getCloseInstructionCrc().equals(convertedHexString)){
-                          //关指令
-                          deviceInstanceTemplateService.updateStatusById("0",templateEntityId);
+          byInstruction.subscribe(deviceInstanceTemplateEntity -> {
+              // 异步处理每个结果
+              if (!Objects.isNull(deviceInstanceTemplateEntity)) {
+                  String templateEntityId = deviceInstanceTemplateEntity.getId();
+                  //开关类型，发送指令 = 接受指令
+                  Integer deviceType = deviceInstanceTemplateEntity.getDeviceType();
+                  if (!Objects.isNull(deviceType)) {
+                      if (2 == deviceType) {
+                          if(deviceInstanceTemplateEntity.getOpenInstructionCrc().equals(convertedHexString)){
+                              //开指令
+                              deviceInstanceTemplateService.updateStatusById("1",templateEntityId);
+                          }else if(deviceInstanceTemplateEntity.getCloseInstructionCrc().equals(convertedHexString)){
+                              //关指令
+                              deviceInstanceTemplateService.updateStatusById("0",templateEntityId);
+                          }
                       }
                   }
-              }
-          }else {
-              String redisKey = "mqtt:"+convertedHexString.substring(0,2);
-              String redisKeyValue = redisUtil.get(redisKey)+"";
-              log.info("redisKey:{},currentMessage:{}",redisKey,redisKeyValue);
-              if(StringUtils.isNotBlank(redisKeyValue)&& redisKeyValue.length() >=12) {
-                  String startFunctionStr = redisKeyValue.substring(8, 12);
-                  String deviceId = redisKeyValue.substring(0, 2);
-                  Mono<DeviceInstanceTemplateEntity> template = deviceInstanceTemplateService.findByDeviceId(deviceId);
-                  DeviceInstanceTemplateEntity templateEntity = template.block();
-                  if (!Objects.isNull(templateEntity)) {
-                      Integer deviceType = templateEntity.getDeviceType();
-                      if (!Objects.isNull(deviceType)) {
-                          if (1 == deviceType) {
-                              //取整获取字符串长度
-                              Integer startFunction = Integer.valueOf(startFunctionStr);
-                              log.info("currentMessage:{},startFunction:{}", redisKeyValue, startFunction);
-                              //属性设备
-                              Mono<DeviceDetail> deviceDetail = service.getDeviceDetail(deviceId);
-                              DeviceDetail detail = deviceDetail.block();
-                              if (!Objects.isNull(detail)) {
-                                  log.info("DeviceDetail:{}", JSONObject.toJSONString(detail));
-                                  String metadata = detail.getMetadata();
-                                  String productId = detail.getProductId();
-                                  List<ProductProperties> propertiesList = new ArrayList<>();
-                                  if (StringUtils.isNotBlank(metadata)) {
-                                      JSONObject metadataJson = JSONObject.parseObject(metadata);
-                                      propertiesList = JSONArray.parseArray(metadataJson.getString("properties"), ProductProperties.class);
-                                  }
-                                  List<String> hexList = getHexList(convertedHexString, startFunction);
-                                  log.info("hexList:{}", JSONObject.toJSONString(hexList));
-                                  if (!CollectionUtils.isEmpty(hexList) && !CollectionUtils.isEmpty(propertiesList)) {
-                                      for (int i = 0; i <= propertiesList.size(); i++) { // Adjust t
-                                          Map<String, Object> propertiesMap = new HashMap<>();
-                                          ProductProperties productProperties = propertiesList.get(i);
-                                          propertiesMap.put(productProperties.getId(), hexList.get(i));
-                                          log.info("deviceId:{},param:{}", deviceId, JSONObject.toJSONString(propertiesMap));
-                                          syncSendMessageToDevice(productId, deviceId, propertiesMap);
+              }else {
+                  String redisKey = "mqtt:"+convertedHexString.substring(0,2);
+                  String redisKeyValue = redisUtil.get(redisKey)+"";
+                  log.info("redisKey:{},currentMessage:{}",redisKey,redisKeyValue);
+                  if(StringUtils.isNotBlank(redisKeyValue)&& redisKeyValue.length() >=12) {
+                      String startFunctionStr = redisKeyValue.substring(8, 12);
+                      String deviceId = redisKeyValue.substring(0, 2);
+                      Mono<DeviceInstanceTemplateEntity> template = deviceInstanceTemplateService.findByDeviceId(deviceId);
+                      template.subscribe(templateEntity -> {
+                          // 异步处理每个结果
+                          if (!Objects.isNull(templateEntity)) {
+                              Integer deviceType = templateEntity.getDeviceType();
+                              if (!Objects.isNull(deviceType)) {
+                                  if (1 == deviceType) {
+                                      //取整获取字符串长度
+                                      Integer startFunction = Integer.valueOf(startFunctionStr);
+                                      log.info("currentMessage:{},startFunction:{}", redisKeyValue, startFunction);
+                                      //属性设备
+                                      Mono<DeviceDetail> deviceDetail = service.getDeviceDetail(deviceId);
+                                      DeviceDetail detail = deviceDetail.block();
+                                      if (!Objects.isNull(detail)) {
+                                          log.info("DeviceDetail:{}", JSONObject.toJSONString(detail));
+                                          String metadata = detail.getMetadata();
+                                          String productId = detail.getProductId();
+                                          List<ProductProperties> propertiesList = new ArrayList<>();
+                                          if (StringUtils.isNotBlank(metadata)) {
+                                              JSONObject metadataJson = JSONObject.parseObject(metadata);
+                                              propertiesList = JSONArray.parseArray(metadataJson.getString("properties"), ProductProperties.class);
+                                          }
+                                          List<String> hexList = getHexList(convertedHexString, startFunction);
+                                          log.info("hexList:{}", JSONObject.toJSONString(hexList));
+                                          if (!CollectionUtils.isEmpty(hexList) && !CollectionUtils.isEmpty(propertiesList)) {
+                                              for (int i = 0; i <= propertiesList.size(); i++) { // Adjust t
+                                                  Map<String, Object> propertiesMap = new HashMap<>();
+                                                  ProductProperties productProperties = propertiesList.get(i);
+                                                  propertiesMap.put(productProperties.getId(), hexList.get(i));
+                                                  log.info("deviceId:{},param:{}", deviceId, JSONObject.toJSONString(propertiesMap));
+                                                  syncSendMessageToDevice(productId, deviceId, propertiesMap);
+                                              }
+                                          }
                                       }
                                   }
                               }
                           }
-                      }
+                      });
                   }
               }
-          }
+          });
       }catch (Exception e){
           log.error(e.getMessage());
       }
