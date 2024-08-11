@@ -81,6 +81,18 @@ public class DeviceMessageController {
                             redisKey = "mqtt:"+deviceId;
                         }else {
                             redisKey = "mqtt:"+instruction;
+                            String templateEntityId = deviceInstanceTemplateEntity.getId();
+                            //开关类型，判断开关
+                            if(deviceInstanceTemplateEntity.getOpenInstructionCrc().equals(instruction)){
+                                //开指令
+                                log.info("开:templateEntityId:{}",templateEntityId);
+                                deviceInstanceTemplateService.updateStatusById("1",templateEntityId);
+                            }else if(deviceInstanceTemplateEntity.getCloseInstructionCrc().equals(instruction)){
+                                log.info("关:templateEntityId:{}",templateEntityId);
+                                //关指令
+                                deviceInstanceTemplateService.updateStatusById("0",templateEntityId);
+                            }
+
                         }
                         log.info("crcResult:{}",JSONObject.toJSON(instruction));
                         byte[] payload = hexStringToByteArray(instruction);
@@ -101,6 +113,7 @@ public class DeviceMessageController {
             log.error(e.getMessage(), e);
             e.printStackTrace();
         }
+        Thread.sleep(1500);
         return Flux.empty();
     }
 
