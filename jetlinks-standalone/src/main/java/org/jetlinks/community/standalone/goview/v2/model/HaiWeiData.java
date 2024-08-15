@@ -37,4 +37,6 @@ public class HaiWeiData implements Serializable {
     @TableField(fill = FieldFill.INSERT)
     private String createTime;
 
+    private String creatorId;
+
 }
