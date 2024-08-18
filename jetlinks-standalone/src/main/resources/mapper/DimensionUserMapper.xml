@@ -1,14 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.jetlinks.community.standalone.goview.v2.mapper.DimensionUserMapper">
-    <select id="selectByUserId" resultType="java.lang.String">
-        SELECT GROUP_CONCAT(user_id SEPARATOR ', ') AS userId
+    <select id="selectUserIdByUserId" resultType="java.lang.String">
+        SELECT DISTINCT user_id as userId
         FROM s_dimension_user
         WHERE dimension_id IN (
             SELECT dimension_id
             FROM s_dimension_user
             WHERE user_id = #{userId} and dimension_type_id = 'org'
         )
-        GROUP BY user_id
+    </select>
+    <select id="selectRoleByUserId" resultType="java.lang.String">
+        SELECT DISTINCT dimension_id as roleId
+        FROM s_dimension_user
+        WHERE dimension_id IN (
+            SELECT dimension_id
+            FROM s_dimension_user
+            WHERE user_id = #{userId} and dimension_type_id = 'role'
+        )
+    </select>
+
+    <select id="selectOrgIdByUserId" resultType="java.lang.String">
+        SELECT DISTINCT dimension_id AS orgId
+        FROM s_dimension_user
+        WHERE dimension_id IN (
+            SELECT dimension_id
+            FROM s_dimension_user
+            WHERE user_id = #{userId} and dimension_type_id = 'org'
+        )
     </select>
 </mapper>

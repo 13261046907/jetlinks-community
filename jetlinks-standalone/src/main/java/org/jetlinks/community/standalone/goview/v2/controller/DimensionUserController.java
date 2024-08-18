@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.jetlinks.community.standalone.goview.v2.common.base.BaseController;
 import org.jetlinks.community.standalone.goview.v2.common.domain.ResultTable;
+import org.jetlinks.community.standalone.goview.v2.model.vo.UserDimensionVo;
 import org.jetlinks.community.standalone.goview.v2.service.DimensionUserService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,9 +25,9 @@ public class DimensionUserController extends BaseController {
     @GetMapping("/list")
     @ResponseBody
     public ResultTable list(String userId){
-        String userIds =  dimensionUserService.selectByUserId(userId);
+        UserDimensionVo userDimensionVo = dimensionUserService.selecDimensionByUserId(userId);
         ResultTable resultTable=new ResultTable();
-        resultTable.setData(userIds);
+        resultTable.setData(userDimensionVo);
         resultTable.setCode(200);
         resultTable.setMsg("获取成功");
         return resultTable;
