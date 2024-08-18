@@ -22,17 +22,17 @@ public class DimensionUserServiceImpl extends ServiceImpl<DimensionUserMapper, D
         UserDimensionVo userDimensionVo = new UserDimensionVo();
         List<String> userList = dimensionUserMapper.selectUserIdByUserId(userId);
         if(CollectionUtils.isNotEmpty(userList)){
-            String userIds = userList.stream().collect(Collectors.joining(", "));
+            String userIds = userList.stream().collect(Collectors.joining(","));
             userDimensionVo.setUserIds(userIds);
         }
         List<String> orgList = dimensionUserMapper.selectOrgIdByUserId(userId);
         if(CollectionUtils.isNotEmpty(orgList)){
-            String orgIds = orgList.stream().collect(Collectors.joining(", "));
+            String orgIds = orgList.stream().collect(Collectors.joining(","));
             userDimensionVo.setOrgIds(orgIds);
         }
         List<String> roleList = dimensionUserMapper.selectRoleByUserId(userId);
         if(CollectionUtils.isNotEmpty(roleList)){
-            String roseIds = roleList.stream().collect(Collectors.joining(", "));
+            String roseIds = roleList.stream().collect(Collectors.joining(","));
             userDimensionVo.setRoleIds(roseIds);
         }
         return userDimensionVo;
