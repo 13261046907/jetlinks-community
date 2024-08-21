@@ -70,7 +70,7 @@ public class DeviceMessageController {
              * 1、根据instruction指令查询设备模版表唯一一条数据
              * 2、判断设备类型，属性key:deviceId,开关key:instruction
              */
-            Mono<DeviceInstanceTemplateEntity> byInstruction = deviceInstanceTemplateService.findByInstruction(instruction);
+            Mono<DeviceInstanceTemplateEntity> byInstruction = deviceInstanceTemplateService.findByInstruction(sendTopic,instruction);
             byInstruction.subscribe(deviceInstanceTemplateEntity -> {
                 // 异步处理每个结果
                 if(!Objects.isNull(deviceInstanceTemplateEntity)) {

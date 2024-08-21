@@ -16,11 +16,21 @@ public class DeviceInstanceTemplateService extends GenericReactiveCrudService<De
             .where(DeviceInstanceTemplateEntity::getDeviceId, deviceId).fetchOne();
     }
 
-    public Mono<DeviceInstanceTemplateEntity> findByInstruction(String instruction) {
+    public Mono<DeviceInstanceTemplateEntity> findByInstruction(String topic,String instruction) {
         return createQuery()
-            .where(DeviceInstanceTemplateEntity::getInstructionCrc, instruction)
-            .or(DeviceInstanceTemplateEntity::getOpenInstructionCrc, instruction)
-            .or(DeviceInstanceTemplateEntity::getCloseInstructionCrc, instruction).fetchOne();
+            .where(DeviceInstanceTemplateEntity::getSendTopic, topic)
+            .and(DeviceInstanceTemplateEntity::getCloseInstructionCrc,instruction)
+            .or(DeviceInstanceTemplateEntity::getSendTopic,topic)
+            .and(DeviceInstanceTemplateEntity::getOpenInstructionCrc, instruction)
+            .or(DeviceInstanceTemplateEntity::getAcceptTopic,topic)
+            .and(DeviceInstanceTemplateEntity::getCloseInstructionCrc, instruction)
+            .or(DeviceInstanceTemplateEntity::getAcceptTopic,topic)
+            .and(DeviceInstanceTemplateEntity::getOpenInstructionCrc, instruction)
+            .or(DeviceInstanceTemplateEntity::getSendTopic, topic)
+            .and(DeviceInstanceTemplateEntity::getInstructionCrc, instruction)
+            .or(DeviceInstanceTemplateEntity::getAcceptTopic, topic)
+            .and(DeviceInstanceTemplateEntity::getInstructionCrc, instruction)
+            .fetchOne();
     }
 
     public void updateStatusById(String status,String id) {

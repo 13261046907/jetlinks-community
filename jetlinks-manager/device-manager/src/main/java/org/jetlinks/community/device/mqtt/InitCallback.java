@@ -66,7 +66,7 @@ public class InitCallback implements MqttCallback {
            * 1、根据instruction指令查询设备模版表唯一一条数据
            * 2、判断设备类型，属性key:deviceId,开关key:instruction
            */
-          Mono<DeviceInstanceTemplateEntity> byInstruction = deviceInstanceTemplateService.findByInstruction(convertedHexString);
+          Mono<DeviceInstanceTemplateEntity> byInstruction = deviceInstanceTemplateService.findByInstruction(topic,convertedHexString);
           // 判断是否为空
           DeviceInstanceTemplateEntity deviceInstanceTemplateEntity = byInstruction.block();
           log.info("deviceInstanceTemplateEntity:{}", JSONObject.toJSONString(deviceInstanceTemplateEntity));
