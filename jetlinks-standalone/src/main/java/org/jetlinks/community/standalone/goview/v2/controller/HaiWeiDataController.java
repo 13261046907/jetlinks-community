@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.apache.commons.lang3.StringUtils;
 import org.jetlinks.community.standalone.goview.v2.common.base.BaseController;
 import org.jetlinks.community.standalone.goview.v2.common.domain.AjaxResult;
 import org.jetlinks.community.standalone.goview.v2.common.domain.ResultTable;
@@ -16,6 +17,7 @@ import org.jetlinks.community.standalone.goview.v2.util.ConvertUtil;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -36,9 +38,14 @@ public class HaiWeiDataController extends BaseController {
     @ApiOperation(value = "分页跳转", notes = "分页跳转")
     @GetMapping("/list")
     @ResponseBody
-    public ResultTable list(Tablepar tablepar){
+    public ResultTable list(Tablepar tablepar,String creatorIdList){
         Page<HaiWeiData> page= new Page<HaiWeiData>(tablepar.getPage(), tablepar.getLimit());
-        IPage<HaiWeiData> iPages=iHaiWeiDataService.page(page, new LambdaQueryWrapper<HaiWeiData>());
+        LambdaQueryWrapper<HaiWeiData> wrapper = new LambdaQueryWrapper<>();
+        if(StringUtils.isNotBlank(creatorIdList)){
+            List<String> creatorIds = Arrays.asList(creatorIdList.split(","));
+            wrapper.in(HaiWeiData::getCreatorId,creatorIds);
+        }
+        IPage<HaiWeiData> iPages=iHaiWeiDataService.page(page, wrapper);
         ResultTable resultTable=new ResultTable();
         resultTable.setData(iPages.getRecords());
         resultTable.setCode(200);
