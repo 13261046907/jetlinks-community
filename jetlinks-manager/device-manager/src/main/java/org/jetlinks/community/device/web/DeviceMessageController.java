@@ -15,6 +15,7 @@ import org.jetlinks.community.device.entity.DeviceInstanceTemplateEntity;
 import org.jetlinks.community.device.entity.DevicePropertiesEntity;
 import org.jetlinks.community.device.mqtt.MQTTConnect;
 import org.jetlinks.community.device.service.DeviceInstanceTemplateService;
+import org.jetlinks.community.device.tcp.TcpClient;
 import org.jetlinks.community.utils.ErrorUtils;
 import org.jetlinks.core.device.DeviceOperator;
 import org.jetlinks.core.device.DeviceRegistry;
@@ -52,9 +53,21 @@ public class DeviceMessageController {
     private final MQTTConnect mqttConnect;
     @Autowired
     private RedisUtil redisUtil;
+    @Autowired
+    private TcpClient tcpClient;
 
     public DeviceMessageController(MQTTConnect mqttConnect) {
         this.mqttConnect = mqttConnect;
+    }
+
+    @GetMapping("/sent")
+    public String sentMsg(){
+        try {
+            tcpClient.sendMsg("1111");
+        } catch (Exception e) {
+            return e.toString();
+        }
+        return "1111";
     }
 
     //设备功能调用
