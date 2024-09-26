@@ -42,7 +42,7 @@ spring:
             static-locations: file:./static/,/,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/, classpath:/public/
     redis:
         # 地址
-        host: redis-local.tsjhjs.cn
+        host: 101.201.119.26
         # 端口，默认为6379
         port: 60019
         # 数据库索引
