@@ -3,7 +3,9 @@ package org.jetlinks.community.device.tcp;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import org.springframework.stereotype.Component;
 
+@Component
 public class TcpClientHandler extends SimpleChannelInboundHandler<Object> {
 
     @Override
