@@ -34,7 +34,9 @@ public class JetLinksApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(JetLinksApplication.class, args);
+        log.info("TcpServer...start");
         TcpServer.run();
+        log.info("TcpServer...end");
     }
 
     @Component
