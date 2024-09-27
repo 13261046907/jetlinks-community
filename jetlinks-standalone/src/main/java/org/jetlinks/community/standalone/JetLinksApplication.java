@@ -1,11 +1,12 @@
 package org.jetlinks.community.standalone;
 
 import lombok.extern.slf4j.Slf4j;
-import org.hswebframework.web.authorization.basic.configuration.EnableAopAuthorize;
 import org.hswebframework.web.authorization.events.AuthorizingHandleBeforeEvent;
 import org.hswebframework.web.crud.annotation.EnableEasyormRepository;
 import org.hswebframework.web.logging.aop.EnableAccessLogger;
 import org.hswebframework.web.logging.events.AccessLoggerAfterEvent;
+import org.jetlinks.community.device.tcp.TcpClient;
+import org.jetlinks.community.device.tcp.TcpServer;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -33,6 +34,7 @@ public class JetLinksApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(JetLinksApplication.class, args);
+        TcpServer.run();
     }
 
     @Component
@@ -54,6 +56,5 @@ public class JetLinksApplication {
 
         }
     }
-
 
 }
