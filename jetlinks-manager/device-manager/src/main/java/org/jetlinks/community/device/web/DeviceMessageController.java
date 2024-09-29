@@ -15,7 +15,7 @@ import org.jetlinks.community.device.entity.DeviceInstanceTemplateEntity;
 import org.jetlinks.community.device.entity.DevicePropertiesEntity;
 import org.jetlinks.community.device.mqtt.MQTTConnect;
 import org.jetlinks.community.device.service.DeviceInstanceTemplateService;
-import org.jetlinks.community.device.tcp.TcpClient;
+import org.jetlinks.community.device.tcp.NettyTcpServerHandler;
 import org.jetlinks.community.utils.ErrorUtils;
 import org.jetlinks.core.device.DeviceOperator;
 import org.jetlinks.core.device.DeviceRegistry;
@@ -54,16 +54,16 @@ public class DeviceMessageController {
     @Autowired
     private RedisUtil redisUtil;
     @Autowired
-    private TcpClient tcpClient;
+    private NettyTcpServerHandler nettyTcpServerHandler;
 
     public DeviceMessageController(MQTTConnect mqttConnect) {
         this.mqttConnect = mqttConnect;
     }
 
     @GetMapping("/sent")
-    public String sentMsg(){
+    public String sentMsg(String code,String msg){
         try {
-            tcpClient.sendMsg("1111");
+            nettyTcpServerHandler.channelWrite(code,msg);
         } catch (Exception e) {
             return e.toString();
         }
