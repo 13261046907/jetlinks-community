@@ -36,7 +36,7 @@ public class HexConverter {
 
     public static void main(String[] args) {
         // 示例使用
-        String originalString = "AT+MQPUB?crc";
+        String originalString = "0103000000044409";
         byte[] originalBytes = originalString.getBytes(StandardCharsets.UTF_8);
 
         // 转换为十六进制字符串

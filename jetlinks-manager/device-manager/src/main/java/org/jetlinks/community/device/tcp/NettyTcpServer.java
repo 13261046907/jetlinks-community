@@ -7,6 +7,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import lombok.extern.slf4j.Slf4j;
+import org.jetlinks.community.device.configuration.RedisUtil;
 import org.springframework.stereotype.Component;
 
 import java.net.InetSocketAddress;
@@ -14,6 +15,14 @@ import java.net.InetSocketAddress;
 @Slf4j
 @Component
 public class NettyTcpServer {
+
+    private final RedisUtil redisUtil;
+
+    // 构造函数注入RedisUtil
+    public NettyTcpServer(RedisUtil redisUtil) {
+        this.redisUtil = redisUtil;
+    }
+
     public void start(InetSocketAddress address) {
         //配置服务端的NIO线程组
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
@@ -26,7 +35,7 @@ public class NettyTcpServer {
                     .channel(NioServerSocketChannel.class)
                     .localAddress(address)
                     //编码解码
-                    .childHandler(new NettyTcpServerChannelInitializer())
+                    .childHandler(new NettyTcpServerChannelInitializer(redisUtil))
                     //服务端接受连接的队列长度，如果队列已满，客户端连接将被拒绝
                     .option(ChannelOption.SO_BACKLOG, 128)
                     //保持长连接，2小时无数据激活心跳机制

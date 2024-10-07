@@ -2,6 +2,7 @@ package org.jetlinks.community.device.mqtt;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import groovyjarjarantlr4.v4.runtime.tree.xpath.XPathLexerErrorListener;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -213,6 +214,25 @@ public class InitCallback implements MqttCallback {
         return  hexList;
     }
 
+    public static void main(String[] args) {
+        byte[] payload = hexStringToByteArray("0103000000044409");
+        System.out.println(payload);
+
+        String convertedHexString = "01030800E000260000003B0D3C";
+        int num = 4;
+        int startIndex = 6; // Starting index for the first humidity
+        List<String> hexList = new ArrayList<>();
+        int length = 4; // Length of each humidity substring
+        for (int i = 0; i <= num; i++) { // Adjust the loop count based on how many substrings you want
+            String hex= convertedHexString.substring(startIndex + (i * length), startIndex + ((i + 1) * length));
+            int decValue = Integer.parseInt(hex, 16);
+            double dividedByTen = (double) decValue / 10.0;
+            DecimalFormat df = new DecimalFormat("0.00");
+            String result = df.format(dividedByTen);
+            hexList.add(result);
+        }
+        System.out.println(hexList.toString());
+    }
     public Boolean messageDate(long timestamp) {
         // 转换为 Instant
         Instant instant = Instant.ofEpochSecond(timestamp);

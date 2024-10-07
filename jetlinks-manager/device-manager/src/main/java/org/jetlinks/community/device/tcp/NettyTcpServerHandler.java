@@ -1,20 +1,43 @@
 package org.jetlinks.community.device.tcp;
 
-import io.netty.buffer.ByteBufUtil;
+import cn.hutool.http.HttpRequest;
+import cn.hutool.json.JSONUtil;
+import com.alibaba.fastjson.JSONObject;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelId;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
+import io.netty.util.ReferenceCountUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.jetlinks.community.device.configuration.RedisUtil;
+import org.jetlinks.community.device.mqtt.HexConverter;
+import org.jetlinks.community.device.rk.config.WebConfig;
+import org.jetlinks.community.device.rk.domain.DataPackage;
+import org.jetlinks.community.device.rk.utils.CacheManager;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
 public class NettyTcpServerHandler extends ChannelInboundHandlerAdapter {
+    private RedisUtil redisUtil;
+
+    // 构造函数注入RedisUtil
+    public NettyTcpServerHandler(RedisUtil redisUtil) {
+        this.redisUtil = redisUtil;
+    }
+
     /**
      * 管理一个全局map，保存连接进服务端的通道数量
      */
@@ -74,27 +97,195 @@ public class NettyTcpServerHandler extends ChannelInboundHandlerAdapter {
             log.info("客户端【" + channelId + "】退出netty服务器[IP:" + clientIp + "--->PORT:" + insocket.getPort() + "]");
             log.info("连接通道数量: " + CHANNEL_MAP.size());
         }
+        log.info("下线或者强制退出时触发：" + ctx.channel().remoteAddress());
+        ctx.close();
     }
 
-    /**
+   /* *//**
      * @param ctx
      * @author xiongchuan on 2019/4/28 16:10
      * @DESCRIPTION: 有客户端发消息会触发此函数
      * @return: void
-     */
+     *//*
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         String hex=ByteBufUtil.hexDump(((String) msg).getBytes());
         log.info("加载客户端报文......");
         log.info("【" + ctx.channel().id() + "】" + " :" + hex);
 
-        /**
+        *//**
          *  下面可以解析数据，保存数据，生成返回报文，将需要返回报文写入write函数
          *
-         */
-
+         *//*
         //响应客户端
-        this.channelWrite(ctx.channel().id()+"", msg);
+        ctx.write("I got server message thanks server!");
+    }*/
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+        try {
+            String channelId = ctx.channel().id() + "";
+            String hex=  msg.toString().trim();
+            log.info("加载客户端报文......");
+            log.info("【" + ctx.channel().id() + "】" + " :" + hex);
+            //响应客户端
+            ctx.write("I got server message thanks server!");
+            DataPackage dp = DataPackage.from(msg.toString().trim());
+            if (null == dp) {
+                log.info("接收原始数据1:{}: " + hex);
+                String instruction = redisUtil.get(channelId)+"";
+                log.info("redisKey:{},instruction:{}",channelId,instruction);
+                if(StringUtils.isNotBlank(instruction)) {
+                    // 判断 aa 是否包含 bb
+                    if (hex.contains(instruction)) {
+                        // 找到 bb 在 aa 中的起始索引
+                        int index = hex.indexOf(instruction);
+                        // 截取 bb 之后的字段
+                        String result = hex.substring(index + instruction.length());
+                        // 输出结果
+                        System.out.println("截取后的字段: " + result);
+                        List<String> hexList = getHexList(result, 4);
+                        log.info("hexList:{}", JSONObject.toJSONString(hexList));
+                    }
+                }
+//                ctx.close();
+                return;
+            }
+
+            log.info("接收数据2: " + dp.getMN() + "\t" + msg.toString() + "\r\n");
+            if (!dp.getCN().equalsIgnoreCase("login") && (null == dp.getData() || dp.getMN() == null)) {
+                log.info("接收原始数据3: " + msg.toString().trim());
+//                ctx.close();
+                return;
+            }
+
+            CacheManager.getInstance().updateDevice(dp.getMN(), ctx);
+            boolean boo = true;
+            String url = null;
+            Map<String, Object> data = new HashMap();
+            String var7 = dp.getCN().toLowerCase();
+            byte var8 = -1;
+            switch(var7.hashCode()) {
+                case 113250:
+                    if (var7.equals("rtd")) {
+                        var8 = 1;
+                    }
+                    break;
+                case 3064427:
+                    if (var7.equals("ctrl")) {
+                        var8 = 2;
+                    }
+                    break;
+                case 103149417:
+                    if (var7.equals("login")) {
+                        var8 = 0;
+                    }
+                    break;
+                case 110621352:
+                    if (var7.equals("trans")) {
+                        var8 = 4;
+                    }
+                    break;
+                case 1082290915:
+                    if (var7.equals("receive")) {
+                        var8 = 3;
+                    }
+            }
+
+            List convertToList;
+            switch(var8) {
+                case 0:
+                    url = WebConfig.getLogin();
+                    data.put("type", dp.getCN());
+                    data.put("deviceAddr", dp.getMN());
+                    break;
+                case 1:
+                    url = WebConfig.getRealTimeData();
+                    data.put("type", dp.getCN());
+                    data.put("deviceAddr", dp.getMN());
+                    data.put("data", dp.getData());
+                    break;
+                case 2:
+                    boo = false;
+                    url = WebConfig.getCtrl();
+                    convertToList = DataPackage.convertToList(dp.getData());
+                    data.put("type", dp.getCN());
+                    data.put("deviceAddr", dp.getMN());
+                    data.put("data", convertToList);
+                    break;
+                case 3:
+                    boo = false;
+                    url = WebConfig.getReceive();
+                    convertToList = DataPackage.convertToList(dp.getData());
+                    data.put("type", dp.getCN());
+                    data.put("deviceAddr", dp.getMN());
+                    data.put("data", convertToList);
+                    break;
+                case 4:
+                    boo = false;
+                    url = WebConfig.getTrans();
+                    convertToList = DataPackage.convertToList(dp.getData());
+                    data.put("type", dp.getCN());
+                    data.put("deviceAddr", dp.getMN());
+                    data.put("data", convertToList);
+            }
+
+            if (boo) {
+                ctx.writeAndFlush(dp.toAck());
+            }
+
+            this.post(url, JSONUtil.toJsonStr(data));
+        } finally {
+            ReferenceCountUtil.release(msg);
+        }
+    }
+
+    public List<String> getHexList(String convertedHexString, int num){
+        int startIndex = 6; // Starting index for the first humidity
+        List<String> hexList = new ArrayList<>();
+        int length = 4; // Length of each humidity substring
+        for (int i = 0; i <= num; i++) { // Adjust the loop count based on how many substrings you want
+            String hex= convertedHexString.substring(startIndex + (i * length), startIndex + ((i + 1) * length));
+            String hexStr = hexToStr(hex);
+            hexList.add(hexStr);
+        }
+        return  hexList;
+    }
+
+    private String hexToStr(String hexValue){
+        int decValue = Integer.parseInt(hexValue, 16);
+        double dividedByTen = (double) decValue / 10.0;
+        DecimalFormat df = new DecimalFormat("0.00");
+        String result = df.format(dividedByTen);
+        return result;
+    }
+
+    public void post(String finalUrl, String params) {
+        (new Thread(new Runnable() {
+            public void run() {
+                try {
+                    if (finalUrl != null) {
+                        String body = params.replace("-", ":");
+                        String data = HttpRequest.post(finalUrl).body(body, "application/json").execute().body();
+                        log.info("推送地址: " + finalUrl + "\t" + data);
+                    }
+                } catch (Exception var3) {
+                    log.info(finalUrl, var3);
+                }
+
+            }
+        })).start();
+    }
+
+    /**
+     * 从服务端收到新的数据、读取完成时调用
+     *
+     * @param ctx
+     */
+    @Override
+    public void channelReadComplete(ChannelHandlerContext ctx) throws IOException
+    {
+        System.out.println("channelReadComplete");
+        ctx.flush();
     }
 
     /**
@@ -104,23 +295,43 @@ public class NettyTcpServerHandler extends ChannelInboundHandlerAdapter {
      * @DESCRIPTION: 服务端给客户端发送消息
      * @return: void
      */
-    public void channelWrite(String channelId, Object msg) throws Exception {
-
+    public void channelWrite(String channelId, String msg) throws Exception {
         ChannelHandlerContext ctx = CHANNEL_MAP.get(channelId);
+        String hexString = "";
+        try{
+            if (ctx == null) {
+                log.info("通道【" + channelId + "】不存在");
+                return;
+            }
 
-        if (ctx == null) {
-            log.info("通道【" + channelId + "】不存在");
-            return;
-        }
+            if (msg == null && msg == "") {
+                log.info("服务端响应空的消息");
+                return;
+            }
+            redisUtil.set(channelId,msg);
+            log.info("channelWrite=channelId:{},msg:{}",channelId,msg);
+            //将客户端的信息直接返回写入ctx
+            byte[] originalBytes = msg.getBytes(StandardCharsets.UTF_8);
 
-        if (msg == null && msg == "") {
-            log.info("服务端响应空的消息");
-            return;
+            // 转换为十六进制字符串
+            hexString = HexConverter.bytesToHex(originalBytes);
+            System.out.println("Hex: " + hexString);
+            ctx.writeAndFlush(hexString);
+        }catch (Exception e){
+            e.printStackTrace();
+        } finally {
+            ReferenceCountUtil.release(hexString);
         }
-        //将客户端的信息直接返回写入ctx
-        ctx.write(msg);
-        //刷新缓存区
-        ctx.flush();
+    }
+
+    public byte[] hexStringToByteArray(String hexString) {
+        int length = hexString.length();
+        byte[] byteArray = new byte[length / 2];
+        for (int i = 0; i < length; i += 2) {
+            byteArray[i / 2] = (byte) ((Character.digit(hexString.charAt(i), 16) << 4)
+                    + Character.digit(hexString.charAt(i+1), 16));
+        }
+        return byteArray;
     }
 
     @Override

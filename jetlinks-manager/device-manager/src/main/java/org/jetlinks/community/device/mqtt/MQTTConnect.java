@@ -16,7 +16,7 @@ import java.nio.charset.Charset;
 @Data
 public class MQTTConnect {
 
-    private String HOST = "tcp://mqtt.tsjhjs.cn:11883";
+    private String HOST = "tcp://101.201.119.26:11883";
     private  String clientId = "jhyzhihuinongye20240807111";
     private  String topic = "";
     private MqttClient mqttClient;

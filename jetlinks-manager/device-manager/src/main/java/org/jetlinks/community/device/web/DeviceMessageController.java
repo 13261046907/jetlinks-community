@@ -14,6 +14,7 @@ import org.jetlinks.community.device.configuration.RedisUtil;
 import org.jetlinks.community.device.entity.DeviceInstanceTemplateEntity;
 import org.jetlinks.community.device.entity.DevicePropertiesEntity;
 import org.jetlinks.community.device.mqtt.MQTTConnect;
+import org.jetlinks.community.device.rk.utils.R;
 import org.jetlinks.community.device.service.DeviceInstanceTemplateService;
 import org.jetlinks.community.device.tcp.NettyTcpServerHandler;
 import org.jetlinks.community.utils.ErrorUtils;
@@ -33,6 +34,8 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -61,13 +64,34 @@ public class DeviceMessageController {
     }
 
     @GetMapping("/sent")
-    public String sentMsg(String code,String msg){
+    public R sentMsg(String code,String msg){
         try {
+            redisUtil.set(code,msg);
             nettyTcpServerHandler.channelWrite(code,msg);
         } catch (Exception e) {
-            return e.toString();
+            e.printStackTrace();
         }
-        return "1111";
+        return R.ok(code);
+    }
+
+    public List<String> getHexList(String convertedHexString, int num){
+        int startIndex = 6; // Starting index for the first humidity
+        List<String> hexList = new ArrayList<>();
+        int length = 4; // Length of each humidity substring
+        for (int i = 0; i <= num; i++) { // Adjust the loop count based on how many substrings you want
+            String hex= convertedHexString.substring(startIndex + (i * length), startIndex + ((i + 1) * length));
+            String hexStr = hexToStr(hex);
+            hexList.add(hexStr);
+        }
+        return  hexList;
+    }
+
+    private String hexToStr(String hexValue){
+        int decValue = Integer.parseInt(hexValue, 16);
+        double dividedByTen = (double) decValue / 10.0;
+        DecimalFormat df = new DecimalFormat("0.00");
+        String result = df.format(dividedByTen);
+        return result;
     }
 
     //设备功能调用
