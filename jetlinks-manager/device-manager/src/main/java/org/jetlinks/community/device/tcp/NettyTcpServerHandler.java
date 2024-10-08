@@ -3,6 +3,7 @@ package org.jetlinks.community.device.tcp;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSONObject;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelId;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -12,7 +13,6 @@ import io.netty.util.ReferenceCountUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jetlinks.community.device.configuration.RedisUtil;
-import org.jetlinks.community.device.mqtt.HexConverter;
 import org.jetlinks.community.device.rk.config.WebConfig;
 import org.jetlinks.community.device.rk.domain.DataPackage;
 import org.jetlinks.community.device.rk.utils.CacheManager;
@@ -127,14 +127,14 @@ public class NettyTcpServerHandler extends ChannelInboundHandlerAdapter {
             String hex=  msg.toString().trim();
             log.info("加载客户端报文......");
             log.info("【" + ctx.channel().id() + "】" + " :" + hex);
-            //响应客户端
-            ctx.write("I got server message thanks server!");
             DataPackage dp = DataPackage.from(msg.toString().trim());
             if (null == dp) {
                 log.info("接收原始数据1:{}: " + hex);
                 String instruction = redisUtil.get(channelId)+"";
                 log.info("redisKey:{},instruction:{}",channelId,instruction);
                 if(StringUtils.isNotBlank(instruction)) {
+                    //响应客户端
+                    ctx.write(instruction);
                     // 判断 aa 是否包含 bb
                     if (hex.contains(instruction)) {
                         // 找到 bb 在 aa 中的起始索引
@@ -310,17 +310,13 @@ public class NettyTcpServerHandler extends ChannelInboundHandlerAdapter {
             }
             redisUtil.set(channelId,msg);
             log.info("channelWrite=channelId:{},msg:{}",channelId,msg);
-            //将客户端的信息直接返回写入ctx
-            byte[] originalBytes = msg.getBytes(StandardCharsets.UTF_8);
 
-            // 转换为十六进制字符串
-            hexString = HexConverter.bytesToHex(originalBytes);
-            System.out.println("Hex: " + hexString);
-            ctx.writeAndFlush(hexString);
+            //将客户端的信息直接返回写入ctx
+            ByteBuf bufAck = ctx.alloc().buffer();
+            bufAck.writeBytes(msg.getBytes(StandardCharsets.UTF_8));
+            ctx.writeAndFlush(bufAck);
         }catch (Exception e){
             e.printStackTrace();
-        } finally {
-            ReferenceCountUtil.release(hexString);
         }
     }
 
