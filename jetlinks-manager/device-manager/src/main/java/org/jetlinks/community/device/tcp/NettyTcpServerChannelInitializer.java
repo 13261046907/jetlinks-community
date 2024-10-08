@@ -12,15 +12,19 @@ import io.netty.handler.codec.serialization.ObjectEncoder;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import org.jetlinks.community.device.configuration.RedisUtil;
+import org.jetlinks.community.device.service.LocalDeviceInstanceService;
 
 public class NettyTcpServerChannelInitializer extends ChannelInitializer<SocketChannel> {
 
 
     private final RedisUtil redisUtil;
 
+    private final LocalDeviceInstanceService service;
+
     // 构造函数注入RedisUtil
-    public NettyTcpServerChannelInitializer(RedisUtil redisUtil) {
+    public NettyTcpServerChannelInitializer(RedisUtil redisUtil,LocalDeviceInstanceService service) {
         this.redisUtil = redisUtil;
+        this.service = service;
     }
     @Override
     protected void initChannel(SocketChannel socketChannel) throws Exception {
@@ -28,7 +32,7 @@ public class NettyTcpServerChannelInitializer extends ChannelInitializer<SocketC
         socketChannel.pipeline().addLast("encoder", new MyDecoder());
         socketChannel.pipeline().addLast(new ObjectEncoder());
         socketChannel.pipeline().addLast(new ObjectDecoder(ClassResolvers.cacheDisabled(null)));
-        socketChannel.pipeline().addLast(new NettyTcpServerHandler(redisUtil));
+        socketChannel.pipeline().addLast(new NettyTcpServerHandler(redisUtil,service));
         ByteBuf delimiter = Unpooled.copiedBuffer("_$".getBytes());
         socketChannel.pipeline().addLast(new ChannelHandler[]{new DelimiterBasedFrameDecoder(10240, false, delimiter)});
         socketChannel.pipeline().addLast(new ChannelHandler[]{new StringDecoder()});

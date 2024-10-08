@@ -2,6 +2,7 @@ package org.jetlinks.community.device.tcp;
 
 import cn.hutool.http.HttpRequest;
 import cn.hutool.json.JSONUtil;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -13,28 +14,33 @@ import io.netty.util.ReferenceCountUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jetlinks.community.device.configuration.RedisUtil;
+import org.jetlinks.community.device.mqtt.ProductProperties;
+import org.jetlinks.community.device.response.DeviceDetail;
 import org.jetlinks.community.device.rk.config.WebConfig;
 import org.jetlinks.community.device.rk.domain.DataPackage;
 import org.jetlinks.community.device.rk.utils.CacheManager;
+import org.jetlinks.community.device.service.LocalDeviceInstanceService;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
 public class NettyTcpServerHandler extends ChannelInboundHandlerAdapter {
-    private RedisUtil redisUtil;
+    private final RedisUtil redisUtil;
+
+    private final LocalDeviceInstanceService service;
 
     // 构造函数注入RedisUtil
-    public NettyTcpServerHandler(RedisUtil redisUtil) {
+    public NettyTcpServerHandler(RedisUtil redisUtil,LocalDeviceInstanceService service) {
         this.redisUtil = redisUtil;
+        this.service = service;
     }
 
     /**
@@ -137,6 +143,29 @@ public class NettyTcpServerHandler extends ChannelInboundHandlerAdapter {
                     // 输出结果
                     List<String> hexList = getHexList(hex, 4);
                     log.info("hexList:{}", JSONObject.toJSONString(hexList));
+                    //属性设备
+                    Mono<DeviceDetail> deviceDetail = service.getDeviceDetail("03");
+                    DeviceDetail detail = deviceDetail.block();
+                    if (!Objects.isNull(detail)) {
+                        log.info("DeviceDetail:{}", JSONObject.toJSONString(detail));
+                        String metadata = detail.getMetadata();
+                        String productId = detail.getProductId();
+                        List<ProductProperties> propertiesList = new ArrayList<>();
+                        if (StringUtils.isNotBlank(metadata)) {
+                            JSONObject metadataJson = JSONObject.parseObject(metadata);
+                            propertiesList = JSONArray.parseArray(metadataJson.getString("properties"), ProductProperties.class);
+                        }
+                        if (!CollectionUtils.isEmpty(hexList) && !CollectionUtils.isEmpty(propertiesList)) {
+                            for (int i = 0; i <= propertiesList.size(); i++) { // Adjust t
+                                Map<String, Object> propertiesMap = new HashMap<>();
+                                ProductProperties productProperties = propertiesList.get(i);
+                                propertiesMap.put(productProperties.getId(), hexList.get(i));
+                                log.info("deviceId:{},param:{}", hex, JSONObject.toJSONString(propertiesMap));
+                                syncSendMessageToDevice(productId, hex, propertiesMap);
+                            }
+                        }
+                    }
+
                 }
 //                ctx.close();
                 return;
@@ -352,5 +381,9 @@ public class NettyTcpServerHandler extends ChannelInboundHandlerAdapter {
         ctx.close();
         log.info(ctx.channel().id() + " 发生了错误,此连接被关闭" + "此时连通数量: " + CHANNEL_MAP.size());
         //cause.printStackTrace();
+    }
+
+    private void syncSendMessageToDevice(String productId,String deviceId,Map<String, Object> props){
+        service.writeProperties(productId,deviceId, props);
     }
 }
