@@ -74,26 +74,6 @@ public class DeviceMessageController {
         return R.ok(code);
     }
 
-    public List<String> getHexList(String convertedHexString, int num){
-        int startIndex = 6; // Starting index for the first humidity
-        List<String> hexList = new ArrayList<>();
-        int length = 4; // Length of each humidity substring
-        for (int i = 0; i <= num; i++) { // Adjust the loop count based on how many substrings you want
-            String hex= convertedHexString.substring(startIndex + (i * length), startIndex + ((i + 1) * length));
-            String hexStr = hexToStr(hex);
-            hexList.add(hexStr);
-        }
-        return  hexList;
-    }
-
-    private String hexToStr(String hexValue){
-        int decValue = Integer.parseInt(hexValue, 16);
-        double dividedByTen = (double) decValue / 10.0;
-        DecimalFormat df = new DecimalFormat("0.00");
-        String result = df.format(dividedByTen);
-        return result;
-    }
-
     //设备功能调用
     @GetMapping("invoked/{deviceId}/function")
     @SneakyThrows

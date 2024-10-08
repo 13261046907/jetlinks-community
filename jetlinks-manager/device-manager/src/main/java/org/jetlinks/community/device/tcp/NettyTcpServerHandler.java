@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -137,13 +136,8 @@ public class NettyTcpServerHandler extends ChannelInboundHandlerAdapter {
                     ctx.write(instruction);
                     // 判断 aa 是否包含 bb
                     if (hex.contains(instruction)) {
-                        // 找到 bb 在 aa 中的起始索引
-                        int index = hex.indexOf(instruction);
-                        // 截取 bb 之后的字段
-                        String result = hex.substring(index + instruction.length());
                         // 输出结果
-                        System.out.println("截取后的字段: " + result);
-                        List<String> hexList = getHexList(result, 4);
+                        List<String> hexList = getHexList(hex, 4);
                         log.info("hexList:{}", JSONObject.toJSONString(hexList));
                     }
                 }
@@ -297,20 +291,17 @@ public class NettyTcpServerHandler extends ChannelInboundHandlerAdapter {
      */
     public void channelWrite(String channelId, String msg) throws Exception {
         ChannelHandlerContext ctx = CHANNEL_MAP.get(channelId);
-        String hexString = "";
         try{
             if (ctx == null) {
                 log.info("通道【" + channelId + "】不存在");
                 return;
             }
-
             if (msg == null && msg == "") {
                 log.info("服务端响应空的消息");
                 return;
             }
             redisUtil.set(channelId,msg);
             log.info("channelWrite=channelId:{},msg:{}",channelId,msg);
-
             //将客户端的信息直接返回写入ctx
             ByteBuf bufAck = ctx.alloc().buffer();
             byte[] payload = hexStringToByteArray(msg);
