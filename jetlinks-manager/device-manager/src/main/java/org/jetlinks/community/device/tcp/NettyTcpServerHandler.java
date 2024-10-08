@@ -313,7 +313,8 @@ public class NettyTcpServerHandler extends ChannelInboundHandlerAdapter {
 
             //将客户端的信息直接返回写入ctx
             ByteBuf bufAck = ctx.alloc().buffer();
-            bufAck.writeBytes(msg.getBytes(StandardCharsets.UTF_8));
+            byte[] payload = hexStringToByteArray(msg);
+            bufAck.writeBytes(payload);
             ctx.writeAndFlush(bufAck);
         }catch (Exception e){
             e.printStackTrace();
