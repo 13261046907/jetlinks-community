@@ -134,12 +134,9 @@ public class NettyTcpServerHandler extends ChannelInboundHandlerAdapter {
                 if(StringUtils.isNotBlank(instruction)) {
                     //响应客户端
                     ctx.write(instruction);
-                    // 判断 aa 是否包含 bb
-                    if (hex.contains(instruction)) {
-                        // 输出结果
-                        List<String> hexList = getHexList(hex, 4);
-                        log.info("hexList:{}", JSONObject.toJSONString(hexList));
-                    }
+                    // 输出结果
+                    List<String> hexList = getHexList(hex, 4);
+                    log.info("hexList:{}", JSONObject.toJSONString(hexList));
                 }
 //                ctx.close();
                 return;
