@@ -161,8 +161,8 @@ public class NettyTcpServerHandler extends ChannelInboundHandlerAdapter {
                                     Map<String, Object> propertiesMap = new HashMap<>();
                                     ProductProperties productProperties = propertiesList.get(i);
                                     propertiesMap.put(productProperties.getId(), hexList.get(i));
-                                    log.info("deviceId:{},param:{}", hex, JSONObject.toJSONString(propertiesMap));
-                                    syncSendMessageToDevice(productId, hex, propertiesMap);
+                                    log.info("deviceId:{},param:{}", instruction, JSONObject.toJSONString(propertiesMap));
+                                    syncSendMessageToDevice(productId, instruction, propertiesMap);
                                 }
                             }
                         }
