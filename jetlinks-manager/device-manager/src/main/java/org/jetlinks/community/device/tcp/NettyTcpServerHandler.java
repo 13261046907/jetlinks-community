@@ -144,7 +144,7 @@ public class NettyTcpServerHandler extends ChannelInboundHandlerAdapter {
                     List<String> hexList = getHexList(hex, 4);
                     log.info("hexList:{}", JSONObject.toJSONString(hexList));
                     //属性设备
-                    Mono<DeviceDetail> deviceDetail = service.getDeviceDetail("03");
+                    Mono<DeviceDetail> deviceDetail = service.getDeviceDetail("0103000000044409");
                     DeviceDetail detail = deviceDetail.block();
                     if (!Objects.isNull(detail)) {
                         log.info("DeviceDetail:{}", JSONObject.toJSONString(detail));
