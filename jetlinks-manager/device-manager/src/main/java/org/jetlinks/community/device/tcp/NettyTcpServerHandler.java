@@ -157,7 +157,7 @@ public class NettyTcpServerHandler extends ChannelInboundHandlerAdapter {
                                 propertiesList = JSONArray.parseArray(metadataJson.getString("properties"), ProductProperties.class);
                             }
                             if (!CollectionUtils.isEmpty(hexList) && !CollectionUtils.isEmpty(propertiesList)) {
-                                for (int i = 0; i <= propertiesList.size(); i++) { // Adjust t
+                                for (int i = 0; i < propertiesList.size(); i++) { // Adjust t
                                     Map<String, Object> propertiesMap = new HashMap<>();
                                     ProductProperties productProperties = propertiesList.get(i);
                                     propertiesMap.put(productProperties.getId(), hexList.get(i));

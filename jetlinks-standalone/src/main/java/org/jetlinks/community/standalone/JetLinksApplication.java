@@ -5,6 +5,7 @@ import org.hswebframework.web.authorization.events.AuthorizingHandleBeforeEvent;
 import org.hswebframework.web.crud.annotation.EnableEasyormRepository;
 import org.hswebframework.web.logging.aop.EnableAccessLogger;
 import org.hswebframework.web.logging.events.AccessLoggerAfterEvent;
+import org.jetlinks.community.device.mqtt.MQTTListener;
 import org.jetlinks.community.device.tcp.NettyTcpServer;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,15 +33,34 @@ public class JetLinksApplication implements CommandLineRunner {
 
     @Autowired
     NettyTcpServer nettyTcpServer;
+    @Autowired
+    MQTTListener mqttListener;
 
     public static void main(String[] args) {
         SpringApplication.run(JetLinksApplication.class, args);
     }
     @Override
     public void run(String... args) throws Exception {
-        //启动TCP服务
-        InetSocketAddress tcpAddress = new InetSocketAddress("0.0.0.0", 9999);
-        nettyTcpServer.start(tcpAddress);
+        mqttListener.run();
     }
 
+    @Component
+    @Slf4j
+    public static class AdminAllAccess {
+
+        @EventListener
+        public void handleAuthEvent(AuthorizingHandleBeforeEvent e) {
+            //admin用户拥有所有权限
+            if (e.getContext().getAuthentication().getUser().getUsername().equals("")) {
+                e.setAllow(true);
+            }
+        }
+
+        @EventListener
+        public void handleAccessLogger(AccessLoggerAfterEvent event) {
+
+            log.info("{}=>{} {}-{}", event.getLogger().getIp(), event.getLogger().getUrl(), event.getLogger().getDescribe(), event.getLogger().getAction());
+
+        }
+    }
 }

@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-public class MQTTListener implements ApplicationRunner {
+public class MQTTListener{
     private final MQTTConnect server;
     private final InitCallback initCallback;
 
@@ -21,8 +21,7 @@ public class MQTTListener implements ApplicationRunner {
     this.initCallback = initCallback;
   }
 
-  @Override
-  public void run(ApplicationArguments args) {
+  public void run() {
       try {
           server.setMqttClient(MqttConstant.MQTT_USERNAME, MqttConstant.MQTT_PASSWORD, initCallback);
           server.sub("/111111/313431303334323238343334300D/properties/report");

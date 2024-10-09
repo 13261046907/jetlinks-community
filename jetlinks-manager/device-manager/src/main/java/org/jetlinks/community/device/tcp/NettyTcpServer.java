@@ -9,13 +9,15 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import lombok.extern.slf4j.Slf4j;
 import org.jetlinks.community.device.configuration.RedisUtil;
 import org.jetlinks.community.device.service.LocalDeviceInstanceService;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
 import java.net.InetSocketAddress;
 
 @Slf4j
 @Component
-public class NettyTcpServer {
+public class NettyTcpServer implements ApplicationRunner {
 
     private final RedisUtil redisUtil;
 
@@ -55,5 +57,11 @@ public class NettyTcpServer {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
         }
+    }
+
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+        InetSocketAddress tcpAddress = new InetSocketAddress("0.0.0.0", 9999);
+        this.start(tcpAddress);
     }
 }
