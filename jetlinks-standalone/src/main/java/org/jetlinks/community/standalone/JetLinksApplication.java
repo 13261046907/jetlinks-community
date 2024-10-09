@@ -39,7 +39,7 @@ public class JetLinksApplication implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         //启动TCP服务
-        InetSocketAddress tcpAddress = new InetSocketAddress("0.0.0.0", 19999);
+        InetSocketAddress tcpAddress = new InetSocketAddress("0.0.0.0", 9999);
         nettyTcpServer.start(tcpAddress);
     }
 

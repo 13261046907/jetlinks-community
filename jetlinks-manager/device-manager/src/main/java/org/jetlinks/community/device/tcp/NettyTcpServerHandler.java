@@ -144,28 +144,31 @@ public class NettyTcpServerHandler extends ChannelInboundHandlerAdapter {
                     List<String> hexList = getHexList(hex, 4);
                     log.info("hexList:{}", JSONObject.toJSONString(hexList));
                     //属性设备
-                    Mono<DeviceDetail> deviceDetail = service.getDeviceDetail("0103000000044409");
-                    DeviceDetail detail = deviceDetail.block();
-                    if (!Objects.isNull(detail)) {
-                        log.info("DeviceDetail:{}", JSONObject.toJSONString(detail));
-                        String metadata = detail.getMetadata();
-                        String productId = detail.getProductId();
-                        List<ProductProperties> propertiesList = new ArrayList<>();
-                        if (StringUtils.isNotBlank(metadata)) {
-                            JSONObject metadataJson = JSONObject.parseObject(metadata);
-                            propertiesList = JSONArray.parseArray(metadataJson.getString("properties"), ProductProperties.class);
-                        }
-                        if (!CollectionUtils.isEmpty(hexList) && !CollectionUtils.isEmpty(propertiesList)) {
-                            for (int i = 0; i <= propertiesList.size(); i++) { // Adjust t
-                                Map<String, Object> propertiesMap = new HashMap<>();
-                                ProductProperties productProperties = propertiesList.get(i);
-                                propertiesMap.put(productProperties.getId(), hexList.get(i));
-                                log.info("deviceId:{},param:{}", hex, JSONObject.toJSONString(propertiesMap));
-                                syncSendMessageToDevice(productId, hex, propertiesMap);
+                    try{
+                        Mono<DeviceDetail> deviceDetail = service.getDeviceDetail("0103000000044409");
+                        DeviceDetail detail = deviceDetail.block();
+                        if (!Objects.isNull(detail)) {
+                            log.info("DeviceDetail:{}", JSONObject.toJSONString(detail));
+                            String metadata = detail.getMetadata();
+                            String productId = detail.getProductId();
+                            List<ProductProperties> propertiesList = new ArrayList<>();
+                            if (StringUtils.isNotBlank(metadata)) {
+                                JSONObject metadataJson = JSONObject.parseObject(metadata);
+                                propertiesList = JSONArray.parseArray(metadataJson.getString("properties"), ProductProperties.class);
+                            }
+                            if (!CollectionUtils.isEmpty(hexList) && !CollectionUtils.isEmpty(propertiesList)) {
+                                for (int i = 0; i <= propertiesList.size(); i++) { // Adjust t
+                                    Map<String, Object> propertiesMap = new HashMap<>();
+                                    ProductProperties productProperties = propertiesList.get(i);
+                                    propertiesMap.put(productProperties.getId(), hexList.get(i));
+                                    log.info("deviceId:{},param:{}", hex, JSONObject.toJSONString(propertiesMap));
+                                    syncSendMessageToDevice(productId, hex, propertiesMap);
+                                }
                             }
                         }
+                    }catch (Exception e){
+                        e.printStackTrace();
                     }
-
                 }
 //                ctx.close();
                 return;
