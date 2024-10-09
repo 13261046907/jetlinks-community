@@ -14,9 +14,9 @@ import java.sql.SQLException;
 @Component
 @Configuration
 public class DbUtils {
-    private static final String URL = "jdbc:mysql://101.201.119.26:30016/jetlinks?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=GMT%2b8";
-    private static final String USER = "root";
-    private static final String PASSWORD = "3+PloXbwcM7+JA=";
+    private static final String URL = "jdbc:mysql://mysql-local.tsjhjs.cn:3306/jetlinks?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=GMT%2b8";
+    private static final String USER = "jetlinks";
+    private static final String PASSWORD = "hO59ByGOePqwh6OCeR22MttJZA4=";
 
     private static HikariDataSource dataSource;
 
