@@ -1,7 +1,6 @@
 package org.jetlinks.community.standalone;
 
 import lombok.extern.slf4j.Slf4j;
-import org.hswebframework.web.authorization.basic.configuration.EnableAopAuthorize;
 import org.hswebframework.web.authorization.events.AuthorizingHandleBeforeEvent;
 import org.hswebframework.web.crud.annotation.EnableEasyormRepository;
 import org.hswebframework.web.logging.aop.EnableAccessLogger;
@@ -20,16 +19,11 @@ import org.springframework.stereotype.Component;
 })
 @EnableCaching
 @EnableEasyormRepository("org.jetlinks.community.**.entity")
-//@EnableAopAuthorize
 @EnableAccessLogger
 @Slf4j
 @MapperScan(basePackages = "org.jetlinks.community.standalone.goview.v2.mapper")
-//@ComponentScan(basePackages = {"org.jetlinks.community.standalone.goview.v2.mapper",
-//                                "org.jetlinks.community.timeseries",
-//                                "org.jetlinks.community.notify.manager.service",
-//                                "org.jetlinks.community.config",
-//                                "org.jetlinks.community.io.file"})
 public class JetLinksApplication {
+
 
     public static void main(String[] args) {
         SpringApplication.run(JetLinksApplication.class, args);
