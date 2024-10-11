@@ -26,7 +26,7 @@ public class MQTTListener{
           server.setMqttClient(MqttConstant.MQTT_USERNAME, MqttConstant.MQTT_PASSWORD, initCallback);
           server.sub("/10/properties/report");
           server.sub("/01050402/properties/report");
-          server.sub("/111111/313431303334323238343334300D/properties/report");
+          server.sub("/0103000000044409/0103000000044409/properties/report");
           log.info("MQTT启动连接成功！");
       } catch (MqttException e) {
           log.error("MQTT启动连接失败！");

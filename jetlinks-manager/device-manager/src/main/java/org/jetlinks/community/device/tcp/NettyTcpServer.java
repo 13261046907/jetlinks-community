@@ -61,7 +61,7 @@ public class NettyTcpServer implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        InetSocketAddress tcpAddress = new InetSocketAddress("0.0.0.0", 19999);
+        InetSocketAddress tcpAddress = new InetSocketAddress("0.0.0.0", 1883);
         this.start(tcpAddress);
     }
 }

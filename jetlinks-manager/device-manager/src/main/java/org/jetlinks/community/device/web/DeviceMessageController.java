@@ -34,8 +34,6 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -210,7 +208,8 @@ public class DeviceMessageController {
             String openValue = properties.get("open")+"";
 //            String ascii = StringToAscii(openValue);
            /* byte[] originalBytes = openValue.getBytes(StandardCharsets.UTF_8);
-            // 转换为十六进制字符串
+            // 转换为十六
+            进制字符串
             String hexString = HexConverter.bytesToHex(originalBytes);*/
             byte[] payload = hexStringToByteArray(openValue);
             MqttMessage message = new MqttMessage(payload);

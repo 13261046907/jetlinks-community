@@ -638,7 +638,7 @@ public class LocalDeviceInstanceService extends GenericReactiveCrudService<Devic
     @SneakyThrows
     public Mono<Map<String, Object>> writeProperties(String productId,String deviceId,
                                                      Map<String, Object> properties) {
-        log.info("deviceId:{},properties",deviceId,properties);
+        log.info("deviceId:{},properties:{}",deviceId,properties);
         try {
             JSONObject message = new JSONObject();
             message.put("deviceId",deviceId);
