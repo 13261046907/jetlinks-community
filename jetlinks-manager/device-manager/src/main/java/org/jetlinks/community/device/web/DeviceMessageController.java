@@ -14,9 +14,7 @@ import org.jetlinks.community.device.configuration.RedisUtil;
 import org.jetlinks.community.device.entity.DeviceInstanceTemplateEntity;
 import org.jetlinks.community.device.entity.DevicePropertiesEntity;
 import org.jetlinks.community.device.mqtt.MQTTConnect;
-import org.jetlinks.community.device.rk.utils.R;
 import org.jetlinks.community.device.service.DeviceInstanceTemplateService;
-import org.jetlinks.community.device.tcp.NettyTcpServerHandler;
 import org.jetlinks.community.utils.ErrorUtils;
 import org.jetlinks.core.device.DeviceOperator;
 import org.jetlinks.core.device.DeviceRegistry;
@@ -54,14 +52,14 @@ public class DeviceMessageController {
     private final MQTTConnect mqttConnect;
     @Autowired
     private RedisUtil redisUtil;
-    @Autowired
-    private NettyTcpServerHandler nettyTcpServerHandler;
+//    @Autowired
+//    private NettyTcpServerHandler nettyTcpServerHandler;
 
     public DeviceMessageController(MQTTConnect mqttConnect) {
         this.mqttConnect = mqttConnect;
     }
 
-    @GetMapping("/sent")
+/*    @GetMapping("/sent")
     public R sentMsg(String code,String msg){
         try {
             redisUtil.set(code,msg);
@@ -70,7 +68,7 @@ public class DeviceMessageController {
             e.printStackTrace();
         }
         return R.ok(code);
-    }
+    }*/
 
     //设备功能调用
     @GetMapping("invoked/{deviceId}/function")
